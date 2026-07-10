@@ -169,6 +169,54 @@ canvas#grain {
   padding: 24px 0; font-size: 9.5px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--mid); text-align: center;
 }
+
+/* ── Rip Repository ── */
+.repo-section {
+  margin-top: 72px; padding-bottom: 60px;
+}
+.repo-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-top: 2px solid var(--ink); padding-top: 10px; margin-bottom: 24px;
+}
+.repo-title {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink);
+}
+.repo-count {
+  font-size: 9px; letter-spacing: 0.12em; color: var(--mid);
+  text-transform: uppercase;
+}
+.repo-feed { display: flex; flex-direction: column; gap: 0; }
+.repo-entry {
+  display: grid;
+  grid-template-columns: 120px 1fr 80px;
+  gap: 0 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--faint);
+  align-items: start;
+}
+.repo-domain {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink); padding-top: 1px;
+}
+.repo-fonts {
+  font-family: 'SF Mono','Fira Mono','Courier New',monospace;
+  font-size: 10px; color: var(--mid); line-height: 1.7;
+  overflow: hidden;
+}
+.repo-meta {
+  font-size: 8.5px; letter-spacing: 0.08em; color: var(--mid);
+  text-align: right; padding-top: 2px; line-height: 1.8;
+}
+.repo-empty {
+  padding: 32px 0; font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--mid); text-align: center;
+}
+.repo-loading {
+  padding: 32px 0; font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--mid); text-align: center;
+  animation: blink 1.1s ease-in-out infinite;
+}
 </style>
 
 <canvas id="rain"></canvas>
@@ -199,6 +247,16 @@ canvas#grain {
   </div>
   <div class="status-line" id="status"></div>
   <div class="results" id="results" style="display:none"></div>
+
+  <div class="repo-section">
+    <div class="repo-header">
+      <span class="repo-title">Rip Repository</span>
+      <span class="repo-count" id="repoCount"></span>
+    </div>
+    <div class="repo-feed" id="repoFeed">
+      <div class="repo-loading">Loading repository…</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -434,7 +492,7 @@ async function rip() {
   }, 900);
 
   try {
-    const res = await fetch('/api/rip?url=' + encodeURIComponent(url));
+    const res  = await fetch('/api/rip?url=' + encodeURIComponent(url));
     const data = await res.json();
     clearInterval(iv);
     statusEl.className = 'status-line';
@@ -444,6 +502,7 @@ async function rip() {
       statusEl.textContent = 'Error: ' + data.error;
     } else {
       renderResults(data.domain, data.fonts);
+      if (data.fonts.length > 0) logToRepo(data.domain, data.fonts);
     }
   } catch(e) {
     clearInterval(iv);
@@ -451,6 +510,21 @@ async function rip() {
     statusEl.textContent = 'Request failed — try again';
   }
   btn.disabled = false;
+}
+
+async function logToRepo(domain, fonts) {
+  try {
+    await fetch('/api/repo', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        domain,
+        fonts: fonts.map(f => ({name: f.name, fmt: f.fmt})),
+        ts: new Date().toISOString(),
+      })
+    });
+    loadRepo();
+  } catch(e) {}
 }
 
 function renderResults(domain, fonts) {
@@ -470,6 +544,39 @@ function renderResults(domain, fonts) {
     ${rows || '<p class="no-results">No fonts found</p>'}`;
   el.style.display = 'block';
 }
+
+function timeAgo(iso) {
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60)  return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+async function loadRepo() {
+  const feed  = document.getElementById('repoFeed');
+  const count = document.getElementById('repoCount');
+  try {
+    const res  = await fetch('/api/repo');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      feed.innerHTML = '<div class="repo-empty">No rips yet — be the first</div>';
+      count.textContent = '';
+      return;
+    }
+    count.textContent = data.length + ' rip' + (data.length !== 1 ? 's' : '');
+    feed.innerHTML = data.map(e => `
+      <div class="repo-entry">
+        <span class="repo-domain">${e.domain}</span>
+        <span class="repo-fonts">${(e.fonts||[]).map(f => f.name).join('  ·  ')}</span>
+        <span class="repo-meta">${e.count} font${e.count!==1?'s':''}<br>${e.ts ? timeAgo(e.ts) : ''}</span>
+      </div>`).join('');
+  } catch(e) {
+    feed.innerHTML = '<div class="repo-empty">Could not load repository</div>';
+  }
+}
+
+loadRepo();
 
 document.getElementById('ripBtn').addEventListener('click', rip);
 document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') rip(); });
