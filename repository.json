@@ -45,44 +45,5 @@
     ],
     "ts": "2026-07-10T22:29:01.411Z",
     "count": 8
-  },
-  {
-    "domain": "nike.com",
-    "fonts": [
-      {
-        "name": "HelveticaNowDisplayMedium",
-        "fmt": "WOFF2"
-      },
-      {
-        "name": "HelveticaNowText",
-        "fmt": "WOFF2"
-      },
-      {
-        "name": "HelveticaNowTextMedium",
-        "fmt": "WOFF2"
-      },
-      {
-        "name": "Nike-Futura",
-        "fmt": "WOFF2"
-      },
-      {
-        "name": "Nike-Futura-ot-300",
-        "fmt": "WOFF2"
-      },
-      {
-        "name": "Nike-TG",
-        "fmt": "WOFF2"
-      },
-      {
-        "name": "PalatinoLTPro-Light",
-        "fmt": "WOFF2"
-      },
-      {
-        "name": "nike-glyphs",
-        "fmt": "WOFF"
-      }
-    ],
-    "ts": "2026-07-10T22:25:04.768Z",
-    "count": 8
   }
 ]
