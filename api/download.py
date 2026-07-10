@@ -1,9 +1,25 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-import urllib.request
+import urllib.request, io, re
 
 UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
+
+WOFF_PAT = re.compile(r'\.woff2?(\?.*)?$', re.I)
+
+
+def to_ttf(data, src_url):
+    """Convert woff/woff2 bytes to TTF bytes. Returns (ttf_bytes, filename)."""
+    from fontTools.ttLib import TTFont
+    src_name = src_url.split('/')[-1].split('?')[0]
+    stem = re.sub(r'\.woff2?$', '', src_name, flags=re.I)
+    buf_in  = io.BytesIO(data)
+    buf_out = io.BytesIO()
+    f = TTFont(buf_in)
+    f.flavor = None
+    f.save(buf_out)
+    return buf_out.getvalue(), stem + '.ttf'
+
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -23,10 +39,18 @@ class handler(BaseHTTPRequestHandler):
             headers['Origin'] = f'{p.scheme}://{p.netloc}'
 
         try:
-            r = urllib.request.urlopen(
+            r    = urllib.request.urlopen(
                 urllib.request.Request(url, headers=headers), timeout=15)
             data = r.read()
-            filename = url.split('/')[-1].split('?')[0] or 'font'
+
+            if WOFF_PAT.search(url) and len(data) > 500:
+                try:
+                    data, filename = to_ttf(data, url)
+                except Exception:
+                    filename = url.split('/')[-1].split('?')[0] or 'font'
+            else:
+                filename = url.split('/')[-1].split('?')[0] or 'font'
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/octet-stream')
             self.send_header('Content-Disposition', f'attachment; filename="{filename}"')

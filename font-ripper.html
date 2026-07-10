@@ -539,13 +539,16 @@ async function logToRepo(domain, fonts) {
 
 function renderResults(domain, fonts) {
   const el = document.getElementById('results');
-  const rows = fonts.map(f => `
+  const rows = fonts.map(f => {
+    const dlFmt = /woff/i.test(f.fmt) ? 'TTF' : f.fmt.toUpperCase();
+    return `
     <div class="font-row">
       <span class="font-name">${f.name}</span>
-      <span class="font-fmt">${f.fmt}</span>
+      <span class="font-fmt">${dlFmt}</span>
       <span class="font-kb"></span>
       <a class="dl-btn" href="/api/download?url=${encodeURIComponent(f.url)}&site=${encodeURIComponent('https://'+domain)}" title="Download" download>↓</a>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   el.innerHTML = `
     <div class="results-head">
       <span class="results-domain">${domain}</span>
