@@ -1,5 +1,27 @@
 [
   {
+    "domain": "apple.com",
+    "fonts": [
+      {
+        "name": "appleicons_text",
+        "fmt": "WOFF",
+        "url": "https://apple.com/ac/globalfooter/8/en_US/assets/ac-footer/legacy/appleicons_text.woff"
+      },
+      {
+        "name": "appleicons_thin",
+        "fmt": "WOFF",
+        "url": "https://apple.com/ac/globalfooter/8/en_US/assets/ac-footer/legacy/appleicons_thin.woff"
+      },
+      {
+        "name": "appleicons_ultralight",
+        "fmt": "WOFF",
+        "url": "https://apple.com/ac/globalfooter/8/en_US/assets/ac-footer/legacy/appleicons_ultralight.woff"
+      }
+    ],
+    "ts": "2026-07-10T23:09:00.290Z",
+    "count": 3
+  },
+  {
     "domain": "nike.com",
     "fonts": [
       {
