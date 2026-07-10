@@ -159,6 +159,12 @@ canvas#grain {
   font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--mid); background: var(--faint); padding: 2px 5px; flex-shrink: 0;
 }
+.font-tag {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--red); border: 1px solid var(--red); border-radius: 2px;
+  padding: 1px 4px; margin-left: 8px; vertical-align: 1px; opacity: 0.75;
+}
 .font-kb {
   font-size: 10px; color: var(--mid); font-variant-numeric: tabular-nums;
   width: 52px; text-align: right; flex-shrink: 0;
@@ -542,19 +548,32 @@ async function logToRepo(domain, fonts) {
   } catch(e) {}
 }
 
+function isIconFont(name) {
+  return /icon|glyph|symbol|dingbat|pictos/i.test(name);
+}
+
 function renderResults(domain, fonts, reason) {
   const el = document.getElementById('results');
   const rows = fonts.map(f => {
     const dlFmt = /woff/i.test(f.fmt) ? 'TTF' : f.fmt.toUpperCase();
+    const icon = isIconFont(f.name)
+      ? '<span class="font-tag">icon font</span>' : '';
     return `
     <div class="font-row">
-      <span class="font-name">${f.name}</span>
+      <span class="font-name">${f.name}${icon}</span>
       <span class="font-fmt">${dlFmt}</span>
       <span class="font-kb"></span>
       <a class="dl-btn" href="#" title="Download"
          data-url="${f.url}" data-site="https://${domain}" data-name="${f.name}">↓</a>
     </div>`;
   }).join('');
+
+  // If every font found is an icon set, the real typeface is likely a system font.
+  const allIcons = fonts.length > 0 && fonts.every(f => isIconFont(f.name));
+  const note = allIcons
+    ? `<p class="no-reason">These look like icon fonts (little symbols), not text typefaces. This site's main text is probably a built-in system font — like San Francisco or Segoe — that can't be downloaded.</p>`
+    : '';
+
   const empty = '<p class="no-results">No fonts found</p>'
     + (reason ? `<p class="no-reason">${reason}</p>` : '');
   el.innerHTML = `
@@ -562,7 +581,7 @@ function renderResults(domain, fonts, reason) {
       <span class="results-domain">${domain}</span>
       <span class="results-tally">${fonts.length} font${fonts.length !== 1 ? 's' : ''} found</span>
     </div>
-    ${rows || empty}`;
+    ${rows || empty}${note}`;
   el.style.display = 'block';
 }
 
