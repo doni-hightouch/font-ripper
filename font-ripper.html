@@ -69,6 +69,10 @@ canvas#grain {
   position: relative; z-index: 1;
   max-width: 540px; margin: 0 auto;
   padding: 40px 28px 80px;
+  background: rgba(var(--bg-rgb), 0.55);
+  box-shadow: 0 0 0 1px rgba(var(--bg-rgb), 0.3), 0 8px 48px rgba(0,0,0,0.07);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .meta {
@@ -217,6 +221,12 @@ canvas#grain {
   text-transform: uppercase; color: var(--mid); text-align: center;
   animation: blink 1.1s ease-in-out infinite;
 }
+.repo-dl {
+  color: var(--ink); text-decoration: none; display: inline-block;
+  line-height: 1.9;
+}
+.repo-dl:hover { color: var(--red); }
+.repo-dl-arrow { color: var(--red); margin-left: 3px; }
 </style>
 
 <canvas id="rain"></canvas>
@@ -519,7 +529,7 @@ async function logToRepo(domain, fonts) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         domain,
-        fonts: fonts.map(f => ({name: f.name, fmt: f.fmt})),
+        fonts: fonts.map(f => ({name: f.name, fmt: f.fmt, url: f.url})),
         ts: new Date().toISOString(),
       })
     });
@@ -568,7 +578,11 @@ async function loadRepo() {
     feed.innerHTML = data.map(e => `
       <div class="repo-entry">
         <span class="repo-domain">${e.domain}</span>
-        <span class="repo-fonts">${(e.fonts||[]).map(f => f.name).join('  ·  ')}</span>
+        <span class="repo-fonts">${(e.fonts||[]).map(f =>
+          f.url
+            ? `<a class="repo-dl" href="/api/download?url=${encodeURIComponent(f.url)}&site=${encodeURIComponent('https://'+e.domain)}" download title="Download ${f.name}">${f.name} <span class="repo-dl-arrow">↓</span></a>`
+            : `<span>${f.name}</span>`
+        ).join('<br>')}</span>
         <span class="repo-meta">${e.count} font${e.count!==1?'s':''}<br>${e.ts ? timeAgo(e.ts) : ''}</span>
       </div>`).join('');
   } catch(e) {
