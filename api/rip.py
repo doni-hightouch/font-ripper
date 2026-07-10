@@ -171,37 +171,11 @@ class handler(BaseHTTPRequestHandler):
             self._json(400, {'error': 'url parameter required'})
             return
 
-        # Temporary diagnostic: /api/rip?url=...&debug=1
-        if query.get('debug', [''])[0]:
-            self._json(200, self._diagnose(url))
-            return
-
         try:
             domain, fonts = scrape(url)
             self._json(200, {'domain': domain, 'fonts': fonts})
         except Exception as e:
             self._json(500, {'error': str(e)})
-
-    def _diagnose(self, url):
-        if not url.startswith('http'):
-            url = 'https://' + url
-        out = {'key_present': bool(SCRAPER_KEY), 'key_len': len(SCRAPER_KEY)}
-        # Direct urllib attempt
-        try:
-            r = urllib.request.urlopen(
-                urllib.request.Request(url, headers={'User-Agent': UA}), timeout=12)
-            out['direct'] = {'status': r.status, 'len': len(r.read())}
-        except Exception as e:
-            out['direct'] = {'error': type(e).__name__ + ': ' + str(e)[:120]}
-        # ScraperAPI attempt
-        if SCRAPER_KEY:
-            try:
-                r = urllib.request.urlopen(scraper_url(url), timeout=60)
-                body = r.read()
-                out['scraper'] = {'status': r.status, 'len': len(body)}
-            except Exception as e:
-                out['scraper'] = {'error': type(e).__name__ + ': ' + str(e)[:200]}
-        return out
 
     def _json(self, code, data):
         body = json.dumps(data).encode()

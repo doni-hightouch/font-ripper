@@ -541,17 +541,13 @@ function renderResults(domain, fonts) {
   const el = document.getElementById('results');
   const rows = fonts.map(f => {
     const dlFmt = /woff/i.test(f.fmt) ? 'TTF' : f.fmt.toUpperCase();
-    const isData = f.url && f.url.startsWith('data:');
-    const href = isData
-      ? f.url  // browser can download data URIs directly
-      : `/api/download?url=${encodeURIComponent(f.url)}&site=${encodeURIComponent('https://'+domain)}`;
-    const dlName = f.name + '.ttf';
     return `
     <div class="font-row">
       <span class="font-name">${f.name}</span>
       <span class="font-fmt">${dlFmt}</span>
       <span class="font-kb"></span>
-      <a class="dl-btn" href="${href}" title="Download" download="${dlName}">↓</a>
+      <a class="dl-btn" href="#" title="Download"
+         data-url="${f.url}" data-site="https://${domain}" data-name="${f.name}">↓</a>
     </div>`;
   }).join('');
   el.innerHTML = `
@@ -588,7 +584,7 @@ async function loadRepo() {
         <span class="repo-domain">${e.domain}</span>
         <span class="repo-fonts">${(e.fonts||[]).map(f =>
           f.url
-            ? `<a class="repo-dl" href="/api/download?url=${encodeURIComponent(f.url)}&site=${encodeURIComponent('https://'+e.domain)}" download title="Download ${f.name}">${f.name} <span class="repo-dl-arrow">↓</span></a>`
+            ? `<a class="repo-dl" href="#" data-url="${f.url}" data-site="https://${e.domain}" data-name="${f.name}" title="Download ${f.name}">${f.name} <span class="repo-dl-arrow">↓</span></a>`
             : `<span>${f.name}</span>`
         ).join('<br>')}</span>
         <span class="repo-meta">${e.count} font${e.count!==1?'s':''}<br>${e.ts ? timeAgo(e.ts) : ''}</span>
@@ -596,6 +592,44 @@ async function loadRepo() {
   } catch(e) {
     feed.innerHTML = '<div class="repo-empty">Could not load repository</div>';
   }
+}
+
+// ── Download handling (delegated) ──
+// Try the server (fetches + converts woff→TTF). If the server can't reach a
+// Cloudflare-protected origin, fall back to the user's own browser fetching
+// the original file directly — a real browser on a residential IP.
+document.addEventListener('click', function(ev) {
+  const a = ev.target.closest('.dl-btn, .repo-dl');
+  if (!a || !a.dataset.url) return;
+  ev.preventDefault();
+  downloadFont(a.dataset.url, a.dataset.site || '', a.dataset.name || 'font');
+});
+
+async function downloadFont(url, site, name) {
+  // Base64-embedded fonts: the browser can save them directly.
+  if (url.startsWith('data:')) { saveTo(url, name + '.woff2'); return; }
+  try {
+    const res = await fetch('/api/download?url=' + encodeURIComponent(url)
+                          + '&site=' + encodeURIComponent(site));
+    if (!res.ok) throw new Error('server-fetch-failed');
+    const blob = await res.blob();
+    if (blob.size < 200) throw new Error('empty');
+    const obj = URL.createObjectURL(blob);
+    saveTo(obj, name + '.ttf');
+    setTimeout(() => URL.revokeObjectURL(obj), 5000);
+  } catch (e) {
+    // Fallback: open the original file directly in the user's browser.
+    window.open(url, '_blank');
+  }
+}
+
+function saveTo(href, filename) {
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 loadRepo();
