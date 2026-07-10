@@ -681,7 +681,11 @@ async function handlePill(pill) {
   const state = pill.dataset.state;
   const name  = pill.dataset.name;
   if (state === 'found') {          // already located → download it
-    downloadFont(pill.dataset.url, '', name);
+    if (pill.dataset.zip === '1') {
+      window.open(pill.dataset.url, '_blank');   // Font Squirrel serves a ZIP
+    } else {
+      downloadFont(pill.dataset.url, '', name);  // Google Fonts → convert to TTF
+    }
     return;
   }
   if (state !== 'idle') return;     // searching / not-found → do nothing
@@ -695,6 +699,7 @@ async function handlePill(pill) {
     if (d.found) {
       pill.dataset.state = 'found';
       pill.dataset.url = d.url;
+      pill.dataset.zip = d.zip ? '1' : '';
       pill.classList.add('pill-found');
       status.innerHTML = d.source + ' ↓';
     } else {
