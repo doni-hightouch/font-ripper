@@ -255,16 +255,15 @@ def convert_ttf(out_dir):
 
 def main():
     if len(sys.argv) < 2:
-        print('Usage: python fontdl.py <url> [output_dir] [--ttf]')
+        print('Usage: python fontdl.py <url> [output_dir]')
         sys.exit(1)
 
     site_url = sys.argv[1]
     if not site_url.startswith('http'):
         site_url = 'https://' + site_url
 
-    args     = sys.argv[2:]
-    do_ttf   = '--ttf' in args
-    out_arg  = next((a for a in args if not a.startswith('-')), None)
+    args    = sys.argv[2:]
+    out_arg = next((a for a in args if not a.startswith('-')), None)
     brand    = urlparse(site_url).hostname.replace('www.', '').split('.')[0]
     out_dir  = Path(out_arg or brand)
     out_dir.mkdir(exist_ok=True)
@@ -301,9 +300,8 @@ def main():
 
     print(f'\nDone — {ok} downloaded, {skipped} already existed, {failed} blocked.')
 
-    if do_ttf:
-        print()
-        convert_ttf(out_dir)
+    print()
+    convert_ttf(out_dir)
 
 
 if __name__ == '__main__':
