@@ -541,12 +541,17 @@ function renderResults(domain, fonts) {
   const el = document.getElementById('results');
   const rows = fonts.map(f => {
     const dlFmt = /woff/i.test(f.fmt) ? 'TTF' : f.fmt.toUpperCase();
+    const isData = f.url && f.url.startsWith('data:');
+    const href = isData
+      ? f.url  // browser can download data URIs directly
+      : `/api/download?url=${encodeURIComponent(f.url)}&site=${encodeURIComponent('https://'+domain)}`;
+    const dlName = f.name + '.ttf';
     return `
     <div class="font-row">
       <span class="font-name">${f.name}</span>
       <span class="font-fmt">${dlFmt}</span>
       <span class="font-kb"></span>
-      <a class="dl-btn" href="/api/download?url=${encodeURIComponent(f.url)}&site=${encodeURIComponent('https://'+domain)}" title="Download" download>↓</a>
+      <a class="dl-btn" href="${href}" title="Download" download="${dlName}">↓</a>
     </div>`;
   }).join('');
   el.innerHTML = `

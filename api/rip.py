@@ -4,8 +4,10 @@ import urllib.request, re, json
 from pathlib import Path
 
 FONT_PAT = re.compile(r'\.(woff2?|ttf|otf|eot)(\?[^"\')\s]*)?', re.I)
+DATA_FONT = re.compile(r'url\(["\']?(data:font/([^;]+);base64,([A-Za-z0-9+/=\s]+))["\']?\)', re.I)
 UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
+
 
 def fetch(url, referer=None):
     headers = {'User-Agent': UA, 'Accept': '*/*'}
@@ -20,6 +22,7 @@ def fetch(url, referer=None):
     except Exception:
         return ''
 
+
 def font_urls_in_css(css, base):
     found = set()
     for m in re.finditer(r'url\(["\']?([^"\')\s]+)["\']?\)', css, re.I):
@@ -27,6 +30,33 @@ def font_urls_in_css(css, base):
         if FONT_PAT.search(u):
             found.add(urljoin(base, u))
     return found
+
+
+def data_fonts_in_css(css):
+    """Extract base64-embedded fonts from @font-face blocks, pairing with font-family name."""
+    results = []
+    seen = set()
+    # Find each @font-face block
+    for block in re.finditer(r'@font-face\s*\{([^}]+)\}', css, re.S | re.I):
+        block_text = block.group(1)
+        # Get font-family name
+        family_m = re.search(r'font-family\s*:\s*["\']?([^"\';\n]+)["\']?', block_text, re.I)
+        family = family_m.group(1).strip().strip('"\'') if family_m else 'font'
+        # Get all data URI fonts in this block
+        for m in DATA_FONT.finditer(block_text):
+            fmt = m.group(2).replace('woff2', 'woff2').replace('woff', 'woff')
+            b64 = m.group(3).replace('\n', '').replace(' ', '')
+            key = b64[:40]
+            if key in seen:
+                continue
+            seen.add(key)
+            results.append({
+                'family': family,
+                'fmt': fmt,
+                'b64': b64,
+            })
+    return results
+
 
 def stylesheet_links(text, base, is_css=False):
     urls = []
@@ -42,6 +72,7 @@ def stylesheet_links(text, base, is_css=False):
         urls.append(urljoin(base, m.group(1)))
     return list(dict.fromkeys(urls))
 
+
 def scrape(site_url):
     if not site_url.startswith('http'):
         site_url = 'https://' + site_url
@@ -50,10 +81,12 @@ def scrape(site_url):
     if not html:
         return site_url, []
 
-    found = set()
+    found_urls = set()
+    data_fonts = []
 
     inline = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', html, re.S | re.I))
-    found |= font_urls_in_css(inline, site_url)
+    found_urls |= font_urls_in_css(inline, site_url)
+    data_fonts += data_fonts_in_css(inline)
 
     visited, queue = set(), stylesheet_links(html, site_url)
     while queue:
@@ -64,14 +97,16 @@ def scrape(site_url):
         css = fetch(css_url, referer=site_url)
         if not css:
             continue
-        found |= font_urls_in_css(css, css_url)
+        found_urls |= font_urls_in_css(css, css_url)
+        data_fonts += data_fonts_in_css(css)
         for imp in stylesheet_links(css, css_url, is_css=True):
             if imp not in visited:
                 queue.append(imp)
 
+    # Deduplicate external URL fonts, prefer woff2
     PREF = {'woff2': 0, 'woff': 1, 'ttf': 2, 'otf': 2, 'eot': 3}
     by_base = {}
-    for url in found:
+    for url in found_urls:
         name = Path(urlparse(url).path).name
         ext = FONT_PAT.search(name)
         if not ext:
@@ -86,6 +121,20 @@ def scrape(site_url):
     for base, (rank, url, name, ext_str) in sorted(by_base.items()):
         stem = re.sub(r'\.' + ext_str + r'$', '', name, flags=re.I)
         fonts.append({'name': stem, 'fmt': ext_str.upper(), 'url': url})
+
+    # Add base64-embedded fonts (dedupe by family+fmt)
+    seen_families = set()
+    for df in data_fonts:
+        key = (df['family'].lower(), df['fmt'])
+        if key in seen_families:
+            continue
+        seen_families.add(key)
+        name = re.sub(r'[^A-Za-z0-9_-]', '-', df['family'])
+        fonts.append({
+            'name': name,
+            'fmt': df['fmt'].upper(),
+            'url': f"data:font/{df['fmt']};base64,{df['b64']}",
+        })
 
     domain = urlparse(site_url).hostname or site_url
     domain = domain.replace('www.', '')
