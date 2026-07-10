@@ -1,0 +1,10 @@
+.DS_Store
+*.DS_Store
+__pycache__/
+*.py[cod]
+nike/
+nike-test/
+chick-fil-a/
+amazon-music/
+stripe-test/
+music/
