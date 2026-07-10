@@ -196,7 +196,18 @@ canvas#grain {
   font-family: 'SF Mono','Fira Mono','Courier New',monospace;
   font-size: 11px; color: var(--ink);
   border: 1px solid var(--border); padding: 3px 8px;
+  cursor: pointer; transition: border-color 0.12s, color 0.12s;
+  display: inline-flex; align-items: baseline; gap: 7px;
 }
+.fam-pill:hover { border-color: var(--mid); }
+.fam-status {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--mid);
+}
+.fam-pill.pill-found { border-color: var(--red); }
+.fam-pill.pill-found .fam-status { color: var(--red); }
+.fam-pill.pill-missing { opacity: 0.5; cursor: default; }
 .fam-note {
   margin-top: 12px; font-size: 10.5px; line-height: 1.55; color: var(--mid);
 }
@@ -597,8 +608,11 @@ function renderResults(domain, fonts, reason, families) {
   const fams = (families || []).filter(n => !isIconFont(n)).slice(0, 8);
   const famBlock = fams.length ? `
     <div class="fam-head">Typefaces referenced</div>
-    <div class="fam-list">${fams.map(n => `<span class="fam-pill">${n}</span>`).join('')}</div>
-    <p class="fam-note">These are the fonts this site's CSS calls for. Names without a download above are system or licensed fonts we can't pull directly.</p>` : '';
+    <div class="fam-list">${fams.map(n => `
+      <span class="fam-pill" data-name="${n}" data-state="idle" title="Search free font libraries">
+        <span class="fam-name">${n}</span><span class="fam-status">find ↗</span>
+      </span>`).join('')}</div>
+    <p class="fam-note">These are the fonts this site's CSS calls for. Click one to search free libraries (Google Fonts) — if it's there, you can download it.</p>` : '';
 
   el.innerHTML = `
     <div class="results-head">
@@ -650,10 +664,49 @@ async function loadRepo() {
 // the original file directly — a real browser on a residential IP.
 document.addEventListener('click', function(ev) {
   const a = ev.target.closest('.dl-btn, .repo-dl');
-  if (!a || !a.dataset.url) return;
-  ev.preventDefault();
-  downloadFont(a.dataset.url, a.dataset.site || '', a.dataset.name || 'font');
+  if (a && a.dataset.url) {
+    ev.preventDefault();
+    downloadFont(a.dataset.url, a.dataset.site || '', a.dataset.name || 'font');
+    return;
+  }
+  const pill = ev.target.closest('.fam-pill');
+  if (pill) {
+    ev.preventDefault();
+    handlePill(pill);
+  }
 });
+
+// ── Referenced-typeface search (Google Fonts) ──
+async function handlePill(pill) {
+  const state = pill.dataset.state;
+  const name  = pill.dataset.name;
+  if (state === 'found') {          // already located → download it
+    downloadFont(pill.dataset.url, '', name);
+    return;
+  }
+  if (state !== 'idle') return;     // searching / not-found → do nothing
+
+  pill.dataset.state = 'searching';
+  const status = pill.querySelector('.fam-status');
+  status.textContent = 'searching…';
+  try {
+    const res = await fetch('/api/find?name=' + encodeURIComponent(name));
+    const d = await res.json();
+    if (d.found) {
+      pill.dataset.state = 'found';
+      pill.dataset.url = d.url;
+      pill.classList.add('pill-found');
+      status.innerHTML = d.source + ' ↓';
+    } else {
+      pill.dataset.state = 'notfound';
+      pill.classList.add('pill-missing');
+      status.textContent = 'not on free libraries';
+    }
+  } catch (e) {
+    pill.dataset.state = 'idle';
+    status.textContent = 'find ↗';
+  }
+}
 
 async function downloadFont(url, site, name) {
   // Base64-embedded fonts: the browser can save them directly.
