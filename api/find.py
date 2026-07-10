@@ -1,9 +1,17 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, quote
-import urllib.request, re, json
+import urllib.request, re, json, os
 
 UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
+
+# Bundled Font Squirrel catalog: {lowercase family name -> download slug}.
+# Snapshotted because their live API is slow/flaky and blocks datacenter IPs.
+try:
+    with open(os.path.join(os.path.dirname(__file__), 'fs_catalog.json')) as _f:
+        FS_CATALOG = json.load(_f)
+except Exception:
+    FS_CATALOG = {}
 
 
 def check_google_fonts(name):
@@ -23,34 +31,14 @@ def check_google_fonts(name):
     return {'found': False}
 
 
-# Font Squirrel's catalog is fetched once per warm instance (their API is slow/flaky).
-_FS_LIST = None
-
-def _fs_catalog():
-    global _FS_LIST
-    if _FS_LIST is not None:
-        return _FS_LIST
-    try:
-        r = urllib.request.urlopen(urllib.request.Request(
-            'https://www.fontsquirrel.com/api/fontlist/all',
-            headers={'User-Agent': UA}), timeout=12)
-        _FS_LIST = json.loads(r.read().decode('utf-8', 'ignore'))
-        return _FS_LIST
-    except Exception:
-        return []   # don't cache the failure — allow a later retry
-
-
 def check_font_squirrel(name):
     """Look a typeface up in Font Squirrel (free-for-commercial fonts, incl. many
     display faces not on Google Fonts). Downloads are ZIP archives."""
-    low = name.lower().strip()
-    for f in _fs_catalog():
-        if f.get('family_name', '').lower() == low:
-            slug = f.get('family_urlname')
-            if slug:
-                return {'found': True, 'source': 'Font Squirrel', 'zip': True,
-                        'url': 'https://www.fontsquirrel.com/fonts/download/' + slug,
-                        'page': 'https://www.fontsquirrel.com/fonts/' + slug}
+    slug = FS_CATALOG.get(name.lower().strip())
+    if slug:
+        return {'found': True, 'source': 'Font Squirrel', 'zip': True,
+                'url': 'https://www.fontsquirrel.com/fonts/download/' + slug,
+                'page': 'https://www.fontsquirrel.com/fonts/' + slug}
     return {'found': False}
 
 
