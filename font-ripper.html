@@ -414,51 +414,9 @@ canvas#grain {
 /* =========================================================
    APP
    ========================================================= */
-const MOCK = {
-  'chick-fil-a': [
-    {name:'apercu-regular',fmt:'woff2',kb:'43 KB'},
-    {name:'apercu-medium',fmt:'woff2',kb:'41 KB'},
-    {name:'apercu-bold',fmt:'woff2',kb:'31 KB'},
-    {name:'apercu-condensed-bold-pro',fmt:'woff2',kb:'13 KB'},
-    {name:'goopercondensed7-bold',fmt:'woff2',kb:'19 KB'},
-    {name:'RooneyPro-Medium',fmt:'woff2',kb:'62 KB'},
-  ],
-  amazon: [
-    {name:'AmazonEmber_Rg',fmt:'woff2',kb:'64 KB'},
-    {name:'AmazonEmber_Bd',fmt:'woff2',kb:'64 KB'},
-    {name:'SharpGroteskPanEuroBold-20',fmt:'woff2',kb:'1.3 MB'},
-    {name:'SharpGroteskPanEuroSmBld-20',fmt:'woff2',kb:'1.3 MB'},
-    {name:'EmberModernDisplayStd-Bold',fmt:'woff2',kb:'92 KB'},
-    {name:'EmberModernDisplayStd-Regular',fmt:'woff2',kb:'92 KB'},
-  ],
-  stripe: [
-    {name:'Sohne',fmt:'woff2',kb:'57 KB'},
-    {name:'SourceCodePro-Medium',fmt:'woff2',kb:'11 KB'},
-  ],
-  github: [
-    {name:'MonaSansVF-wdth-wght-opsz',fmt:'woff2',kb:'214 KB'},
-    {name:'MonaSansMonoVF-wght',fmt:'woff2',kb:'36 KB'},
-    {name:'hubot-sans',fmt:'woff2',kb:'162 KB'},
-    {name:'monaspace-neon',fmt:'woff2',kb:'184 KB'},
-  ],
-};
-
-function pickMock(url) {
-  for (const key of Object.keys(MOCK)) {
-    if (url.toLowerCase().includes(key)) return {domain: key, fonts: MOCK[key]};
-  }
-  let domain = url;
-  try { domain = new URL(url.startsWith('http') ? url : 'https://' + url).hostname.replace('www.',''); } catch(e) {}
-  return {domain, fonts:[
-    {name:'Inter-Regular',fmt:'woff2',kb:'97 KB'},
-    {name:'Inter-SemiBold',fmt:'woff2',kb:'97 KB'},
-    {name:'Inter-Bold',fmt:'woff2',kb:'97 KB'},
-  ]};
-}
-
 const steps = ['Fetching page…','Parsing stylesheets…','Locating @font-face rules…','Resolving font URLs…'];
 
-function rip() {
+async function rip() {
   const url = document.getElementById('urlInput').value.trim();
   if (!url) return;
   const statusEl  = document.getElementById('status');
@@ -467,20 +425,32 @@ function rip() {
   btn.disabled = true;
   resultsEl.style.display = 'none';
   statusEl.className = 'status-line active';
-  statusEl.textContent = steps[0];
+
   let i = 0;
+  statusEl.textContent = steps[0];
   const iv = setInterval(() => {
-    i++;
-    if (i < steps.length) { statusEl.textContent = steps[i]; }
-    else {
-      clearInterval(iv);
-      statusEl.className = 'status-line';
-      statusEl.textContent = '';
-      const {domain, fonts} = pickMock(url);
-      renderResults(domain, fonts);
-      btn.disabled = false;
+    i = (i + 1) % steps.length;
+    statusEl.textContent = steps[i];
+  }, 900);
+
+  try {
+    const res = await fetch('/api/rip?url=' + encodeURIComponent(url));
+    const data = await res.json();
+    clearInterval(iv);
+    statusEl.className = 'status-line';
+    statusEl.textContent = '';
+    if (data.error) {
+      statusEl.className = 'status-line active';
+      statusEl.textContent = 'Error: ' + data.error;
+    } else {
+      renderResults(data.domain, data.fonts);
     }
-  }, 520);
+  } catch(e) {
+    clearInterval(iv);
+    statusEl.className = 'status-line active';
+    statusEl.textContent = 'Request failed — try again';
+  }
+  btn.disabled = false;
 }
 
 function renderResults(domain, fonts) {
@@ -489,8 +459,8 @@ function renderResults(domain, fonts) {
     <div class="font-row">
       <span class="font-name">${f.name}</span>
       <span class="font-fmt">${f.fmt}</span>
-      <span class="font-kb">${f.kb}</span>
-      <button class="dl-btn" title="Download">↓</button>
+      <span class="font-kb"></span>
+      <a class="dl-btn" href="/api/download?url=${encodeURIComponent(f.url)}&site=${encodeURIComponent('https://'+domain)}" title="Download" download>↓</a>
     </div>`).join('');
   el.innerHTML = `
     <div class="results-head">
