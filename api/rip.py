@@ -98,9 +98,11 @@ def scrape(site_url):
     if not site_url.startswith('http'):
         site_url = 'https://' + site_url
 
+    domain = (urlparse(site_url).hostname or site_url).replace('www.', '')
+
     html = fetch(site_url)
     if not html:
-        return site_url, []
+        return domain, [], False
 
     found_urls = set()
     data_fonts = []
@@ -157,9 +159,7 @@ def scrape(site_url):
             'url': f"data:font/{df['fmt']};base64,{df['b64']}",
         })
 
-    domain = urlparse(site_url).hostname or site_url
-    domain = domain.replace('www.', '')
-    return domain, fonts
+    return domain, fonts, True
 
 
 class handler(BaseHTTPRequestHandler):
@@ -172,8 +172,17 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            domain, fonts = scrape(url)
-            self._json(200, {'domain': domain, 'fonts': fonts})
+            domain, fonts, loaded = scrape(url)
+            resp = {'domain': domain, 'fonts': fonts}
+            if not fonts:
+                if not loaded:
+                    resp['reason'] = ("We couldn't open this site — it's blocking "
+                                      "automated visits, so there was nothing for us to read.")
+                else:
+                    resp['reason'] = ("We opened the site but didn't find any downloadable "
+                                      "fonts. It's probably using standard system fonts, or it "
+                                      "loads its fonts in a way we can't reach from the outside.")
+            self._json(200, resp)
         except Exception as e:
             self._json(500, {'error': str(e)})
 
