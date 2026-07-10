@@ -5,10 +5,33 @@ from pathlib import Path
 
 SCRAPER_KEY = os.environ.get('SCRAPER_API_KEY', '')
 
+# Generic / system keywords that aren't real typeface names.
+GENERIC = {'serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui',
+    'ui-sans-serif', 'ui-serif', 'ui-monospace', 'ui-rounded', 'inherit', 'initial',
+    'unset', 'revert', 'none', 'auto', 'math', 'emoji', 'fangsong',
+    '-apple-system', 'blinkmacsystemfont'}
+
 
 def scraper_url(target):
     """Route a fetch through ScraperAPI (residential proxy, beats Cloudflare)."""
     return f'https://api.scraperapi.com/?api_key={SCRAPER_KEY}&url={quote(target, safe="")}'
+
+
+def collect_families(text, count, disp):
+    """Tally font-family names declared in CSS (what the site actually renders in)."""
+    for m in re.finditer(r'font-family\s*:\s*([^;{}]+)', text, re.I):
+        val = re.sub(r'!important', '', m.group(1), flags=re.I)
+        for part in val.split(','):
+            n = part.strip().strip('\'"').strip()
+            low = n.lower()
+            if not n or low in GENERIC:
+                continue
+            if low.startswith('var(') or '\\' in n or len(n) > 40:
+                continue
+            if not re.search(r'[A-Za-z]', n):
+                continue
+            count[low] = count.get(low, 0) + 1
+            disp.setdefault(low, n)
 
 FONT_PAT = re.compile(r'\.(woff2?|ttf|otf|eot)(\?[^"\')\s]*)?', re.I)
 DATA_FONT = re.compile(r'url\(["\']?(data:font/([^;]+);base64,([A-Za-z0-9+/=\s]+))["\']?\)', re.I)
@@ -102,10 +125,12 @@ def scrape(site_url):
 
     html = fetch(site_url)
     if not html:
-        return domain, [], False
+        return domain, [], False, []
 
     found_urls = set()
     data_fonts = []
+    fam_count, fam_disp = {}, {}
+    collect_families(html, fam_count, fam_disp)
 
     inline = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', html, re.S | re.I))
     found_urls |= font_urls_in_css(inline, site_url)
@@ -122,6 +147,7 @@ def scrape(site_url):
             continue
         found_urls |= font_urls_in_css(css, css_url)
         data_fonts += data_fonts_in_css(css)
+        collect_families(css, fam_count, fam_disp)
         for imp in stylesheet_links(css, css_url, is_css=True):
             if imp not in visited:
                 queue.append(imp)
@@ -159,7 +185,10 @@ def scrape(site_url):
             'url': f"data:font/{df['fmt']};base64,{df['b64']}",
         })
 
-    return domain, fonts, True
+    ranked = sorted(fam_count, key=lambda k: -fam_count[k])
+    families = [fam_disp[k] for k in ranked][:15]
+
+    return domain, fonts, True, families
 
 
 class handler(BaseHTTPRequestHandler):
@@ -172,8 +201,8 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            domain, fonts, loaded = scrape(url)
-            resp = {'domain': domain, 'fonts': fonts}
+            domain, fonts, loaded, families = scrape(url)
+            resp = {'domain': domain, 'fonts': fonts, 'families': families}
             if not fonts:
                 if not loaded:
                     resp['reason'] = ("We couldn't open this site — it's blocking "
