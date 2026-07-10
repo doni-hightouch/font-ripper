@@ -1,5 +1,57 @@
 [
   {
+    "domain": "chime.com",
+    "fonts": [
+      {
+        "name": "ChimeDisplayWide_Medium-s.p.1iartwj3_v6qx",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeDisplayWide_Medium-s.p.1iartwj3_v6qx.woff2"
+      },
+      {
+        "name": "ChimeSaans_Bold-s.358m0qw6_oxmb",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeSaans_Bold-s.358m0qw6_oxmb.woff2"
+      },
+      {
+        "name": "ChimeSaans_Heavy-s.3r72ee9606t1l",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeSaans_Heavy-s.3r72ee9606t1l.woff2"
+      },
+      {
+        "name": "ChimeSaans_Light-s.0budjwwk4chte",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeSaans_Light-s.0budjwwk4chte.woff2"
+      },
+      {
+        "name": "ChimeSaans_Medium-s.2rjw6bewlhp6q",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeSaans_Medium-s.2rjw6bewlhp6q.woff2"
+      },
+      {
+        "name": "ChimeSaans_Regular-s.0fp4frczjmo7c",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeSaans_Regular-s.0fp4frczjmo7c.woff2"
+      },
+      {
+        "name": "ChimeSaans_SemiBold-s.3w1mttiyvqi-r",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeSaans_SemiBold-s.3w1mttiyvqi-r.woff2"
+      },
+      {
+        "name": "ChimeSerif_Regular-s.0almd-h47ozd5",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeSerif_Regular-s.0almd-h47ozd5.woff2"
+      },
+      {
+        "name": "ChimeUnlocked_Medium-s.0gvllnj7ju5u8",
+        "fmt": "WOFF2",
+        "url": "https://chime.com/_assets_cdn/_next/static/media/ChimeUnlocked_Medium-s.0gvllnj7ju5u8.woff2"
+      }
+    ],
+    "ts": "2026-07-10T23:08:19.703Z",
+    "count": 9
+  },
+  {
     "domain": "nike.com",
     "fonts": [
       {
