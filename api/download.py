@@ -1,27 +1,36 @@
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
-import urllib.request, io, re
+from urllib.parse import urlparse, parse_qs, quote
+import urllib.request, io, re, os
 
 UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
 
 WOFF_PAT = re.compile(r'\.woff2?(\?.*)?$', re.I)
 
+SCRAPER_KEY = os.environ.get('SCRAPER_API_KEY', '')
+
 
 def fetch_bytes(url, headers):
-    """Fetch binary content, impersonating Chrome to get past bot protection."""
+    """Fetch binary content: direct first, then ScraperAPI residential proxy."""
+    # Layer 1: direct urllib
     try:
-        from curl_cffi import requests as cffi
-        r = cffi.get(url, headers=headers, impersonate='chrome124', timeout=20)
-        if r.status_code < 400:
-            return r.content
+        h = {'User-Agent': UA, 'Accept': '*/*'}
+        h.update(headers)
+        r = urllib.request.urlopen(
+            urllib.request.Request(url, headers=h), timeout=15)
+        data = r.read()
+        if data and len(data) > 200:
+            return data
     except Exception:
         pass
-    h = {'User-Agent': UA, 'Accept': '*/*'}
-    h.update(headers)
-    r = urllib.request.urlopen(
-        urllib.request.Request(url, headers=h), timeout=15)
-    return r.read()
+
+    # Layer 2: ScraperAPI fallback for protected origins
+    if SCRAPER_KEY:
+        api = f'https://api.scraperapi.com/?api_key={SCRAPER_KEY}&url={quote(url, safe="")}'
+        r = urllib.request.urlopen(api, timeout=60)
+        return r.read()
+
+    raise RuntimeError('font fetch failed')
 
 
 def to_ttf(data, src_url):

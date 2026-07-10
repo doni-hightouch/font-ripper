@@ -1,7 +1,14 @@
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs, urljoin
-import urllib.request, re, json
+from urllib.parse import urlparse, parse_qs, urljoin, quote
+import urllib.request, re, json, os
 from pathlib import Path
+
+SCRAPER_KEY = os.environ.get('SCRAPER_API_KEY', '')
+
+
+def scraper_url(target):
+    """Route a fetch through ScraperAPI (residential proxy, beats Cloudflare)."""
+    return f'https://api.scraperapi.com/?api_key={SCRAPER_KEY}&url={quote(target, safe="")}'
 
 FONT_PAT = re.compile(r'\.(woff2?|ttf|otf|eot)(\?[^"\')\s]*)?', re.I)
 DATA_FONT = re.compile(r'url\(["\']?(data:font/([^;]+);base64,([A-Za-z0-9+/=\s]+))["\']?\)', re.I)
@@ -10,32 +17,31 @@ UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
 
 
 def fetch(url, referer=None):
-    headers = {}
+    # Layer 1: direct urllib — free, works for the majority of sites.
+    headers = {'User-Agent': UA, 'Accept': '*/*'}
     if referer:
         headers['Referer'] = referer
         p = urlparse(referer)
         headers['Origin'] = f'{p.scheme}://{p.netloc}'
-
-    # Primary: curl_cffi impersonates a real Chrome TLS fingerprint,
-    # which gets past Cloudflare / bot protection that blocks plain urllib.
     try:
-        from curl_cffi import requests as cffi
-        r = cffi.get(url, headers=headers, impersonate='chrome124', timeout=15)
-        if r.status_code < 400:
-            return r.text
+        r = urllib.request.urlopen(
+            urllib.request.Request(url, headers=headers), timeout=12)
+        text = r.read().decode('utf-8', errors='ignore')
+        if text:
+            return text
     except Exception:
         pass
 
-    # Fallback: plain urllib (works for unprotected sites even if the
-    # binary curl_cffi wheel is unavailable in the runtime).
-    try:
-        h = {'User-Agent': UA, 'Accept': '*/*'}
-        h.update(headers)
-        r = urllib.request.urlopen(
-            urllib.request.Request(url, headers=h), timeout=12)
-        return r.read().decode('utf-8', errors='ignore')
-    except Exception:
-        return ''
+    # Layer 2: ScraperAPI fallback — residential proxy that gets past
+    # Cloudflare / bot protection that blocks datacenter requests.
+    if SCRAPER_KEY:
+        try:
+            r = urllib.request.urlopen(scraper_url(url), timeout=60)
+            return r.read().decode('utf-8', errors='ignore')
+        except Exception:
+            pass
+
+    return ''
 
 
 def font_urls_in_css(css, base):

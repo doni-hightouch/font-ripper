@@ -1,5 +1,8 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/font-ripper.html" }
-  ]
+  ],
+  "functions": {
+    "api/*.py": { "maxDuration": 60 }
+  }
 }
