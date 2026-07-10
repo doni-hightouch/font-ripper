@@ -10,14 +10,29 @@ UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
 
 
 def fetch(url, referer=None):
-    headers = {'User-Agent': UA, 'Accept': '*/*'}
+    headers = {}
     if referer:
         headers['Referer'] = referer
         p = urlparse(referer)
         headers['Origin'] = f'{p.scheme}://{p.netloc}'
+
+    # Primary: curl_cffi impersonates a real Chrome TLS fingerprint,
+    # which gets past Cloudflare / bot protection that blocks plain urllib.
     try:
+        from curl_cffi import requests as cffi
+        r = cffi.get(url, headers=headers, impersonate='chrome124', timeout=15)
+        if r.status_code < 400:
+            return r.text
+    except Exception:
+        pass
+
+    # Fallback: plain urllib (works for unprotected sites even if the
+    # binary curl_cffi wheel is unavailable in the runtime).
+    try:
+        h = {'User-Agent': UA, 'Accept': '*/*'}
+        h.update(headers)
         r = urllib.request.urlopen(
-            urllib.request.Request(url, headers=headers), timeout=12)
+            urllib.request.Request(url, headers=h), timeout=12)
         return r.read().decode('utf-8', errors='ignore')
     except Exception:
         return ''

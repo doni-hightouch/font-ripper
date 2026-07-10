@@ -8,6 +8,22 @@ UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
 WOFF_PAT = re.compile(r'\.woff2?(\?.*)?$', re.I)
 
 
+def fetch_bytes(url, headers):
+    """Fetch binary content, impersonating Chrome to get past bot protection."""
+    try:
+        from curl_cffi import requests as cffi
+        r = cffi.get(url, headers=headers, impersonate='chrome124', timeout=20)
+        if r.status_code < 400:
+            return r.content
+    except Exception:
+        pass
+    h = {'User-Agent': UA, 'Accept': '*/*'}
+    h.update(headers)
+    r = urllib.request.urlopen(
+        urllib.request.Request(url, headers=h), timeout=15)
+    return r.read()
+
+
 def to_ttf(data, src_url):
     """Convert woff/woff2 bytes to TTF bytes. Returns (ttf_bytes, filename)."""
     from fontTools.ttLib import TTFont
@@ -32,16 +48,14 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
-        headers = {'User-Agent': UA, 'Accept': '*/*'}
+        headers = {}
         if site:
             headers['Referer'] = site
             p = urlparse(site)
             headers['Origin'] = f'{p.scheme}://{p.netloc}'
 
         try:
-            r    = urllib.request.urlopen(
-                urllib.request.Request(url, headers=headers), timeout=15)
-            data = r.read()
+            data = fetch_bytes(url, headers)
 
             if WOFF_PAT.search(url) and len(data) > 500:
                 try:
