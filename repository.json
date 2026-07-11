@@ -1,5 +1,112 @@
 [
   {
+    "domain": "hightouch.io",
+    "fonts": [
+      {
+        "name": "FFF-AcidGrotesk-Regular",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/acid-grotesk/FFF-AcidGrotesk-Regular.woff2"
+      },
+      {
+        "name": "Inter-Bold",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-Bold.woff2"
+      },
+      {
+        "name": "Inter-BoldItalic",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-BoldItalic.woff2"
+      },
+      {
+        "name": "Inter-Italic",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-Italic.woff2"
+      },
+      {
+        "name": "Inter-Medium",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-Medium.woff2"
+      },
+      {
+        "name": "Inter-MediumItalic",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-MediumItalic.woff2"
+      },
+      {
+        "name": "Inter-Regular",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-Regular.woff2"
+      },
+      {
+        "name": "Inter-SemiBold",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-SemiBold.woff2"
+      },
+      {
+        "name": "Inter-SemiBoldItalic",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/inter/Inter-SemiBoldItalic.woff2"
+      },
+      {
+        "name": "VictorSerif-40Regular",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/victor-serif/VictorSerif-40Regular.woff2"
+      },
+      {
+        "name": "VictorSerif-45RegularItalic",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/victor-serif/VictorSerif-45RegularItalic.woff2"
+      },
+      {
+        "name": "VictorSerif-50Medium",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/victor-serif/VictorSerif-50Medium.woff2"
+      },
+      {
+        "name": "VictorSerif-55MediumItalic",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/victor-serif/VictorSerif-55MediumItalic.woff2"
+      },
+      {
+        "name": "VictorSerif-60Semibold",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/victor-serif/VictorSerif-60Semibold.woff2"
+      },
+      {
+        "name": "VictorSerif-65SemiboldItalic",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/victor-serif/VictorSerif-65SemiboldItalic.woff2"
+      },
+      {
+        "name": "dm-mono-medium",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/dm-mono/dm-mono-medium.woff2"
+      },
+      {
+        "name": "dm-mono-regular",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/dm-mono/dm-mono-regular.woff2"
+      },
+      {
+        "name": "nuckle-bold",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/nuckle/nuckle-bold.woff2"
+      },
+      {
+        "name": "nuckle-regular",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/nuckle/nuckle-regular.woff2"
+      },
+      {
+        "name": "nuckle-semi-bold",
+        "fmt": "WOFF2",
+        "url": "https://hightouch.io/fonts/nuckle/nuckle-semi-bold.woff2"
+      }
+    ],
+    "ts": "2026-07-11T00:47:54.588Z",
+    "count": 20
+  },
+  {
     "domain": "apple.com",
     "fonts": [
       {
