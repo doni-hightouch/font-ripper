@@ -76,6 +76,37 @@ def font_urls_in_css(css, base):
     return found
 
 
+def font_faces_in_css(css, base, name_map):
+    """Map each font file URL -> a human name from its @font-face rule, so build
+    systems that hash filenames (Next.js etc.) still show 'Mulish-700', not a hash."""
+    for block in re.finditer(r'@font-face\s*\{([^}]*)\}', css, re.S | re.I):
+        b = block.group(1)
+        fam_m = re.search(r'font-family\s*:\s*([^;]+)', b, re.I)
+        if not fam_m:
+            continue
+        family = re.sub(r'\s+', '', fam_m.group(1).strip().strip('\'"'))
+        if not family:
+            continue
+        name = family
+        wt = re.search(r'font-weight\s*:\s*([^;]+)', b, re.I)
+        if wt:
+            nums = re.findall(r'\d{3}', wt.group(1))
+            kw = wt.group(1).strip().lower()
+            if len(nums) >= 2:          # a range → variable font
+                name += '-VF'
+            elif len(nums) == 1:
+                name += '-' + nums[0]
+            elif kw == 'bold':
+                name += '-700'
+        st = re.search(r'font-style\s*:\s*([^;]+)', b, re.I)
+        if st and 'italic' in st.group(1).lower():
+            name += '-italic'
+        for m in re.finditer(r'url\(["\']?([^"\')\s]+)["\']?\)', b, re.I):
+            u = m.group(1).split('?')[0]
+            if FONT_PAT.search(u):
+                name_map[urljoin(base, u)] = name
+
+
 def data_fonts_in_css(css):
     """Extract base64-embedded fonts from @font-face blocks, pairing with font-family name."""
     results = []
@@ -130,7 +161,9 @@ def scrape(site_url):
     found_urls = set()
     data_fonts = []
     fam_count, fam_disp = {}, {}
+    name_map = {}
     collect_families(html, fam_count, fam_disp)
+    font_faces_in_css(html, site_url, name_map)
 
     inline = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', html, re.S | re.I))
     found_urls |= font_urls_in_css(inline, site_url)
@@ -148,6 +181,7 @@ def scrape(site_url):
         found_urls |= font_urls_in_css(css, css_url)
         data_fonts += data_fonts_in_css(css)
         collect_families(css, fam_count, fam_disp)
+        font_faces_in_css(css, css_url, name_map)
         for imp in stylesheet_links(css, css_url, is_css=True):
             if imp not in visited:
                 queue.append(imp)
@@ -167,9 +201,17 @@ def scrape(site_url):
             by_base[base] = (rank, url, name, ext_str)
 
     fonts = []
+    used = set()
     for base, (rank, url, name, ext_str) in sorted(by_base.items()):
         stem = re.sub(r'\.' + ext_str + r'$', '', name, flags=re.I)
-        fonts.append({'name': stem, 'fmt': ext_str.upper(), 'url': url})
+        # Prefer the real name from the @font-face rule over a hashed filename.
+        nice = name_map.get(url, stem)
+        if nice != stem and nice in used:      # same family+weight (e.g. subsets)
+            nice = nice + '-' + stem[:6]
+        used.add(nice)
+        fonts.append({'name': nice, 'fmt': ext_str.upper(), 'url': url})
+
+    fonts.sort(key=lambda f: f['name'].lower())
 
     # Add base64-embedded fonts (dedupe by family+fmt)
     seen_families = set()
