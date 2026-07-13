@@ -703,10 +703,11 @@ document.addEventListener('click', function(ev) {
   }
 });
 
-// ── Download all → single ZIP of every font (converted to TTF) ──
+// ── Download all → one ZIP if possible, else each file individually ──
 async function downloadAll(btn) {
   if (!lastRip || !lastRip.fonts.length || btn.disabled) return;
   const orig = btn.textContent;
+  const site = 'https://' + lastRip.domain;
   btn.disabled = true;
   btn.textContent = 'Zipping…';
   try {
@@ -714,7 +715,7 @@ async function downloadAll(btn) {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        site: 'https://' + lastRip.domain,
+        site,
         fonts: lastRip.fonts.map(f => ({name: f.name, url: f.url})),
       }),
     });
@@ -725,8 +726,14 @@ async function downloadAll(btn) {
     setTimeout(() => URL.revokeObjectURL(obj), 5000);
     btn.textContent = orig;
   } catch (e) {
-    btn.textContent = 'failed';
-    setTimeout(() => { btn.textContent = orig; }, 2500);
+    // ZIP couldn't be built (e.g. a Cloudflare-protected origin) — fall back to
+    // downloading each font individually; each has its own browser fallback.
+    btn.textContent = 'Downloading…';
+    for (const f of lastRip.fonts) {
+      downloadFont(f.url, site, f.name);
+      await new Promise(r => setTimeout(r, 500));
+    }
+    btn.textContent = orig;
   }
   btn.disabled = false;
 }
