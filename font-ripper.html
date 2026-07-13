@@ -146,6 +146,16 @@ canvas#grain {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.13em;
   text-transform: uppercase; color: var(--mid);
 }
+.results-right { display: flex; align-items: baseline; gap: 14px; }
+.dl-all {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 8.5px; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; cursor: pointer;
+  color: var(--bg); background: var(--ink); border: none;
+  padding: 5px 10px; transition: background 0.12s;
+}
+.dl-all:hover { background: var(--red); }
+.dl-all:disabled { opacity: 0.5; cursor: default; }
 .results-tally { font-size: 9.5px; letter-spacing: 0.1em; color: var(--red); }
 .font-row {
   display: flex; align-items: center; padding: 9px 0;
@@ -550,6 +560,7 @@ async function rip() {
       statusEl.className = 'status-line active';
       statusEl.textContent = 'Error: ' + data.error;
     } else {
+      lastRip = {domain: data.domain, fonts: data.fonts};
       renderResults(data.domain, data.fonts, data.reason, data.families);
       if (data.fonts.length > 0) logToRepo(data.domain, data.fonts);
     }
@@ -615,10 +626,15 @@ function renderResults(domain, fonts, reason, families) {
       </span>`).join('')}</div>
     <p class="fam-note">These are the fonts this site's CSS calls for. Click one to search free libraries (Google Fonts) — if it's there, you can download it.</p>` : '';
 
+  const dlAll = fonts.length > 1
+    ? '<button class="dl-all" type="button">↓ Download all</button>' : '';
   el.innerHTML = `
     <div class="results-head">
       <span class="results-domain">${domain}</span>
-      <span class="results-tally">${fonts.length} font${fonts.length !== 1 ? 's' : ''} found</span>
+      <span class="results-right">
+        <span class="results-tally">${fonts.length} font${fonts.length !== 1 ? 's' : ''} found</span>
+        ${dlAll}
+      </span>
     </div>
     ${rows || empty}${note}${famBlock}`;
   el.style.display = 'block';
@@ -659,6 +675,9 @@ async function loadRepo() {
   }
 }
 
+// The most recent successful rip, used by "Download all".
+let lastRip = null;
+
 // ── Download handling (delegated) ──
 // Try the server (fetches + converts woff→TTF). If the server can't reach a
 // Cloudflare-protected origin, fall back to the user's own browser fetching
@@ -670,12 +689,46 @@ document.addEventListener('click', function(ev) {
     downloadFont(a.dataset.url, a.dataset.site || '', a.dataset.name || 'font');
     return;
   }
+  const all = ev.target.closest('.dl-all');
+  if (all) {
+    ev.preventDefault();
+    downloadAll(all);
+    return;
+  }
   const pill = ev.target.closest('.fam-pill');
   if (pill) {
     ev.preventDefault();
     handlePill(pill);
   }
 });
+
+// ── Download all → single ZIP of every font (converted to TTF) ──
+async function downloadAll(btn) {
+  if (!lastRip || !lastRip.fonts.length || btn.disabled) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Zipping…';
+  try {
+    const res = await fetch('/api/zip', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        site: 'https://' + lastRip.domain,
+        fonts: lastRip.fonts.map(f => ({name: f.name, url: f.url})),
+      }),
+    });
+    if (!res.ok) throw new Error('zip failed');
+    const blob = await res.blob();
+    const obj  = URL.createObjectURL(blob);
+    saveTo(obj, lastRip.domain.replace(/[^a-z0-9]+/gi, '-') + '-fonts.zip');
+    setTimeout(() => URL.revokeObjectURL(obj), 5000);
+    btn.textContent = orig;
+  } catch (e) {
+    btn.textContent = 'failed';
+    setTimeout(() => { btn.textContent = orig; }, 2500);
+  }
+  btn.disabled = false;
+}
 
 // ── Referenced-typeface search (Google Fonts) ──
 async function handlePill(pill) {
