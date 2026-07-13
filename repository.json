@@ -3,6 +3,58 @@
     "domain": "fullscript.com",
     "fonts": [
       {
+        "name": "Besley-VF",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/7ea8f666c483998f-s.woff2"
+      },
+      {
+        "name": "Besley-VF-bf8c4b",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/bf8c4b4c6de91678-s.p.woff2"
+      },
+      {
+        "name": "Besley-VF-italic",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/1f4a16fc03ae89de-s.woff2"
+      },
+      {
+        "name": "Besley-VF-italic-89027d",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/89027d631dd2d1b6-s.p.woff2"
+      },
+      {
+        "name": "Mulish-VF",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/1ba4bcc28d9acde5-s.woff2"
+      },
+      {
+        "name": "Mulish-VF-3be83a",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/3be83a346553616c-s.p.woff2"
+      },
+      {
+        "name": "Mulish-VF-3cca6a",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/3cca6a2fae6396cc-s.woff2"
+      },
+      {
+        "name": "Mulish-VF-7d87e5",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/7d87e5ac6ec6000d-s.woff2"
+      },
+      {
+        "name": "Mulish-VF-af6b70",
+        "fmt": "WOFF2",
+        "url": "https://fullscript.com/_next/static/media/af6b7096c023fb67-s.woff2"
+      }
+    ],
+    "ts": "2026-07-13T19:43:24.842Z",
+    "count": 9
+  },
+  {
+    "domain": "fullscript.com",
+    "fonts": [
+      {
         "name": "1ba4bcc28d9acde5-s",
         "fmt": "WOFF2",
         "url": "https://fullscript.com/_next/static/media/1ba4bcc28d9acde5-s.woff2"
