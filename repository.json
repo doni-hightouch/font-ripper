@@ -1,5 +1,52 @@
 [
   {
+    "domain": "nike.com",
+    "fonts": [
+      {
+        "name": "HelveticaNowDisplayMedium-400",
+        "fmt": "WOFF2",
+        "url": "https://www.nike.com/static/ncss/5.0/dotcom/fonts/HelveticaNowDisplayMedium.woff2"
+      },
+      {
+        "name": "HelveticaNowText-400",
+        "fmt": "WOFF2",
+        "url": "https://www.nike.com/static/ncss/5.0/dotcom/fonts/HelveticaNowText.woff2"
+      },
+      {
+        "name": "HelveticaNowTextMedium-400",
+        "fmt": "WOFF2",
+        "url": "https://www.nike.com/static/ncss/5.0/dotcom/fonts/HelveticaNowTextMedium.woff2"
+      },
+      {
+        "name": "nike-glyphs",
+        "fmt": "WOFF",
+        "url": "https://www.nike.com/assets/ncss/glyphs/2.6/fonts/nike-glyphs.woff"
+      },
+      {
+        "name": "NikeFutura-400",
+        "fmt": "WOFF2",
+        "url": "https://www.nike.com/static/ncss/5.0/dotcom/fonts/Nike-Futura.woff2"
+      },
+      {
+        "name": "NikeFuturaND-400",
+        "fmt": "WOFF2",
+        "url": "https://www.nike.com/static/ncss/5.0/dotcom/fonts/Nike-Futura-ot-300.woff2"
+      },
+      {
+        "name": "NikeTG-400",
+        "fmt": "WOFF2",
+        "url": "https://www.nike.com/static/ncss/5.0/dotcom/fonts/Nike-TG.woff2"
+      },
+      {
+        "name": "PalatinoLTProLight-400",
+        "fmt": "WOFF2",
+        "url": "https://www.nike.com/static/ncss/5.0/dotcom/fonts/PalatinoLTPro-Light.woff2"
+      }
+    ],
+    "ts": "2026-07-13T20:01:07.874Z",
+    "count": 8
+  },
+  {
     "domain": "fullscript.com",
     "fonts": [
       {
