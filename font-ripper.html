@@ -516,6 +516,7 @@ canvas#grain {
   const ctx = c.getContext('2d');
   function draw() {
     c.width = window.innerWidth; c.height = window.innerHeight;
+    if (!c.width || !c.height) return;   // guard: 0-size canvas would throw
     const img = ctx.createImageData(c.width, c.height);
     const d = img.data;
     for (let i = 0; i < d.length; i += 4) {
