@@ -1,5 +1,27 @@
 [
   {
+    "domain": "microsoft.com",
+    "fonts": [
+      {
+        "name": "MWF-MDL2",
+        "fmt": "WOFF",
+        "url": "https://assets.onestore.ms/cdnfiles/external/mwf/long/v1/v1.25.0/fonts/MWFMDL2.woff"
+      },
+      {
+        "name": "MWF-MDL2-mwfmdl",
+        "fmt": "WOFF",
+        "url": "https://www.microsoft.com/mwf/_h/v3.54/mwf.app/fonts/mwfmdl2-v3.54.woff"
+      },
+      {
+        "name": "SegoeUI-100",
+        "fmt": "WOFF2",
+        "url": "https://c.s-microsoft.com/static/fonts/segoe-ui/west-european/Light/latest.woff2"
+      }
+    ],
+    "ts": "2026-07-14T16:11:35.076Z",
+    "count": 3
+  },
+  {
     "domain": "apple.com",
     "fonts": [
       {
