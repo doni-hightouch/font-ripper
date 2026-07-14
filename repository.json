@@ -1,5 +1,27 @@
 [
   {
+    "domain": "apple.com",
+    "fonts": [
+      {
+        "name": "AppleLegacyChevron-100",
+        "fmt": "WOFF",
+        "url": "https://apple.com/ac/globalfooter/8/en_US/assets/ac-footer/legacy/appleicons_ultralight.woff"
+      },
+      {
+        "name": "AppleLegacyChevron-300",
+        "fmt": "WOFF",
+        "url": "https://apple.com/ac/globalfooter/8/en_US/assets/ac-footer/legacy/appleicons_thin.woff"
+      },
+      {
+        "name": "AppleLegacyChevron-900",
+        "fmt": "WOFF",
+        "url": "https://apple.com/ac/globalfooter/8/en_US/assets/ac-footer/legacy/appleicons_text.woff"
+      }
+    ],
+    "ts": "2026-07-14T16:11:05.510Z",
+    "count": 3
+  },
+  {
     "domain": "fullscript.com",
     "fonts": [
       {
