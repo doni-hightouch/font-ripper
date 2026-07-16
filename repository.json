@@ -1,5 +1,47 @@
 [
   {
+    "domain": "a24films.com",
+    "fonts": [
+      {
+        "name": "NBInternationalMonoWeb-400",
+        "fmt": "WOFF2",
+        "url": "https://a24films.com/assets/fonts/nbinternationalpromono-webfont.woff2"
+      },
+      {
+        "name": "NBInternationalWeb-400",
+        "fmt": "WOFF2",
+        "url": "https://a24films.com/assets/fonts/nbinternationalproreg-webfont.woff2"
+      },
+      {
+        "name": "NBInternationalWeb-400-italic",
+        "fmt": "WOFF2",
+        "url": "https://a24films.com/assets/fonts/nbinternationalproita-webfont.woff2"
+      },
+      {
+        "name": "NBInternationalWeb-500",
+        "fmt": "WOFF2",
+        "url": "https://a24films.com/assets/fonts/nbinternationalpromed-webfont.woff2"
+      },
+      {
+        "name": "NBInternationalWeb-500-italic",
+        "fmt": "WOFF2",
+        "url": "https://a24films.com/assets/fonts/nbinternationalpromedita-webfont.woff2"
+      },
+      {
+        "name": "NBInternationalWeb-700",
+        "fmt": "WOFF2",
+        "url": "https://a24films.com/assets/fonts/nbinternationalprobol-webfont.woff2"
+      },
+      {
+        "name": "NBInternationalWeb-700-italic",
+        "fmt": "WOFF2",
+        "url": "https://a24films.com/assets/fonts/nbinternationalprobolita-webfont.woff2"
+      }
+    ],
+    "ts": "2026-07-16T04:34:00.085Z",
+    "count": 7
+  },
+  {
     "domain": "microsoft.com",
     "fonts": [
       {
