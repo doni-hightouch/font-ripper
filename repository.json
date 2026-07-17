@@ -1,5 +1,42 @@
 [
   {
+    "domain": "jomalone.com",
+    "fonts": [
+      {
+        "name": "BernhardModernBold",
+        "fmt": "WOFF2",
+        "url": "https://www.jomalone.com/_fonts/jomalone2/BernhardModern/BernhardModernStd-Bold.woff2"
+      },
+      {
+        "name": "KuenstlerScript",
+        "fmt": "WOFF2",
+        "url": "https://www.jomalone.com/_fonts/jomalone2/KuenstlerScript/KuenstlerScriptLTStd-Medium.woff2"
+      },
+      {
+        "name": "LarsMalone-400",
+        "fmt": "WOFF2",
+        "url": "https://www.jomalone.com/_fonts/jomalone2/LarsMalonePro/LarsMalonePro-Regular.woff2"
+      },
+      {
+        "name": "LarsMalone-700",
+        "fmt": "WOFF2",
+        "url": "https://www.jomalone.com/_fonts/jomalone2/LarsMalonePro/LarsMalonePro-Bold.woff2"
+      },
+      {
+        "name": "MaloneSerif-400",
+        "fmt": "WOFF2",
+        "url": "https://www.jomalone.com/_fonts/jomalone2/MaloneSerif/MaloneSerif-Regular.woff2"
+      },
+      {
+        "name": "MaloneSerif-600",
+        "fmt": "WOFF2",
+        "url": "https://www.jomalone.com/_fonts/jomalone2/MaloneSerif/MaloneSerif-SemiBold.woff2"
+      }
+    ],
+    "ts": "2026-07-17T19:56:30.180Z",
+    "count": 6
+  },
+  {
     "domain": "maccosmetics.com",
     "fonts": [
       {
