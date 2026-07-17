@@ -1,5 +1,112 @@
 [
   {
+    "domain": "maccosmetics.com",
+    "fonts": [
+      {
+        "name": "ano-black_regular-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Ano/AnoBlack-Regular.woff2"
+      },
+      {
+        "name": "ano-bold_regular-700",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Ano/AnoBold-Regular.woff2"
+      },
+      {
+        "name": "ano_regular-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Ano/AnoRegular-Regular.woff2"
+      },
+      {
+        "name": "assistant-bold-700",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Assistant/Assistant-Bold.woff2"
+      },
+      {
+        "name": "assistant-extra-bold-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Assistant/Assistant-ExtraBold.woff2"
+      },
+      {
+        "name": "assistant-light-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Assistant/Assistant-VariableFont_wght.woff2"
+      },
+      {
+        "name": "assistant-regular-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Assistant/Assistant-Regular.woff2"
+      },
+      {
+        "name": "druk-medium-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/DrukText/Druk-Medium.woff2"
+      },
+      {
+        "name": "icons-400",
+        "fmt": "WOFF",
+        "url": "https://www.maccosmetics.com/sites/maccosmetics/themes/mac_base/images/icons/output/fonts/icons.woff"
+      },
+      {
+        "name": "noto-black-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Noto/NotoSans-Black.woff2"
+      },
+      {
+        "name": "noto_regular-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Noto/NotoSans-Regular.woff2"
+      },
+      {
+        "name": "roboto-condensed-bold-700",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Roboto/RobotoCondensed-Bold.woff2"
+      },
+      {
+        "name": "roboto-condensed-regular-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Roboto/RobotoCondensed-Regular.woff2"
+      },
+      {
+        "name": "roboto-mono_bold-700",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Roboto/RobotoMono-Bold.woff2"
+      },
+      {
+        "name": "roboto-mono_light-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Roboto/RobotoMono-Light.woff2"
+      },
+      {
+        "name": "roboto-mono_medium-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Roboto/RobotoMono-Medium.woff2"
+      },
+      {
+        "name": "roboto-mono_regular-700",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Roboto/RobotoMono-Regular.woff2"
+      },
+      {
+        "name": "slick-400",
+        "fmt": "WOFF",
+        "url": "https://www.maccosmetics.com/sites/maccosmetics/themes/mac_base/js/bower_components/slick.js/slick/fonts/slick.woff"
+      },
+      {
+        "name": "tstar_mono_roundbol-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Tstar/TstarMonoRound-Bold-Webfont.woff2"
+      },
+      {
+        "name": "tstar_mono_roundregular-400",
+        "fmt": "WOFF2",
+        "url": "https://www.maccosmetics.com/_fonts/maccosmetics/Tstar/TstarMonoRound-Regular-Webfont.woff2"
+      }
+    ],
+    "ts": "2026-07-17T19:55:37.689Z",
+    "count": 20
+  },
+  {
     "domain": "staples.com",
     "fonts": [
       {
