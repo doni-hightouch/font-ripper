@@ -1,5 +1,17 @@
 [
   {
+    "domain": "fonts.adobe.com",
+    "fonts": [
+      {
+        "name": "adobe-notdef",
+        "fmt": "WOFF2",
+        "url": "https://platform-assets.typekit.net/AND-Regular.woff2"
+      }
+    ],
+    "ts": "2026-07-19T08:38:16.638Z",
+    "count": 1
+  },
+  {
     "domain": "jomalone.com",
     "fonts": [
       {
