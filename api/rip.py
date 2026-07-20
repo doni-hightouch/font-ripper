@@ -127,21 +127,30 @@ def _classify(selector):
     return None
 
 
-def collect_roles(css, votes):
-    """Scan CSS rules + design tokens to guess how each font-family is used."""
-    # Design tokens: --font-heading: 'Mulish', ...  → role from the token name.
-    for m in re.finditer(r'(--[\w-]*font[\w-]*)\s*:\s*([^;{}]+)', css, re.I):
-        role = _classify(m.group(1))
-        if not role:
+def collect_roles(css, var_map, votes, pending):
+    """Scan CSS rules + design tokens to guess how each font-family is used.
+    var_map/pending let us resolve `font-family: var(--font-x)` indirections after
+    all CSS is gathered (build tools apply fonts through variables, not h1 rules)."""
+    # CSS custom properties: record --name -> [families]; token name may imply a role.
+    for m in re.finditer(r'(--[\w-]+)\s*:\s*([^;{}]+)', css):
+        name = m.group(1).lower()
+        fams = _families_in_value(m.group(2))
+        if not fams:
             continue
-        for fam in _families_in_value(m.group(2)):
-            votes.setdefault(fam, {}).setdefault(role, 0)
-            votes[fam][role] += 2       # token names are strong signals
+        bucket = var_map.setdefault(name, [])
+        for fam in fams:
+            if fam not in bucket:
+                bucket.append(fam)
+        role = _classify(name)
+        if role:
+            for fam in fams:
+                votes.setdefault(fam, {}).setdefault(role, 0)
+                votes[fam][role] += 2       # token names are strong signals
 
     # Rules: selector { ... font-family: ... }
     for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', css):
         selector, body = m.group(1), m.group(2)
-        if 'font' not in body.lower():
+        if 'font-family' not in body.lower():
             continue
         role = _classify(selector)
         if not role:
@@ -149,9 +158,12 @@ def collect_roles(css, votes):
         ff = re.search(r'font-family\s*:\s*([^;]+)', body, re.I)
         if not ff:
             continue
-        for fam in _families_in_value(ff.group(1)):
+        val = ff.group(1)
+        for fam in _families_in_value(val):
             votes.setdefault(fam, {}).setdefault(role, 0)
             votes[fam][role] += 1
+        for vm in re.finditer(r'var\(\s*(--[\w-]+)', val, re.I):   # resolve later
+            pending.append((role, vm.group(1).lower()))
 
 
 def _families_in_value(value):
@@ -222,9 +234,10 @@ def scrape(site_url):
     data_fonts = []
     fam_count, fam_disp = {}, {}
     name_map, fam_map, role_votes = {}, {}, {}
+    var_map, pending = {}, []
     collect_families(html, fam_count, fam_disp)
     font_faces_in_css(html, site_url, name_map, fam_map)
-    collect_roles(html, role_votes)
+    collect_roles(html, var_map, role_votes, pending)
 
     inline = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', html, re.S | re.I))
     found_urls |= font_urls_in_css(inline, site_url)
@@ -243,12 +256,18 @@ def scrape(site_url):
         data_fonts += data_fonts_in_css(css)
         collect_families(css, fam_count, fam_disp)
         font_faces_in_css(css, css_url, name_map, fam_map)
-        collect_roles(css, role_votes)
+        collect_roles(css, var_map, role_votes, pending)
         for imp in stylesheet_links(css, css_url, is_css=True):
             if imp not in visited:
                 queue.append(imp)
 
-    # Resolve one role per family (highest vote wins).
+    # Resolve `font-family: var(--x)` references now that all vars are known.
+    for role, var in pending:
+        for fam in var_map.get(var, []):
+            role_votes.setdefault(fam, {}).setdefault(role, 0)
+            role_votes[fam][role] += 1
+
+    # One role per family (highest vote wins).
     fam_role = {}
     for fam, votes in role_votes.items():
         fam_role[fam] = max(votes, key=votes.get)
