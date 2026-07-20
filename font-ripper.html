@@ -176,6 +176,17 @@ canvas#grain {
   color: var(--red); border: 1px solid var(--red); border-radius: 2px;
   padding: 1px 4px; margin-left: 8px; vertical-align: 1px; opacity: 0.75;
 }
+.role-tag {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 8px; letter-spacing: 0.09em; text-transform: uppercase;
+  border-radius: 2px; padding: 1px 5px; margin-left: 8px; vertical-align: 1px;
+  color: var(--mid); background: var(--faint);
+}
+.role-tag[data-role="Headings"] { color: var(--red); background: rgba(193,26,26,0.09); }
+.role-tag[data-role="Body"]     { color: var(--ink); }
+.usage-note {
+  margin: 10px 0 4px; font-size: 10.5px; line-height: 1.5; color: var(--mid);
+}
 .font-kb {
   font-size: 10px; color: var(--mid); font-variant-numeric: tabular-nums;
   width: 52px; text-align: right; flex-shrink: 0;
@@ -598,9 +609,11 @@ function renderResults(domain, fonts, reason, families) {
     const dlFmt = /woff/i.test(f.fmt) ? 'TTF' : f.fmt.toUpperCase();
     const icon = isIconFont(f.name)
       ? '<span class="font-tag">icon font</span>' : '';
+    const role = f.role
+      ? `<span class="role-tag" data-role="${f.role}">${f.role}</span>` : '';
     return `
     <div class="font-row">
-      <span class="font-name">${f.name}${icon}</span>
+      <span class="font-name">${f.name}${role}${icon}</span>
       <span class="font-fmt">${dlFmt}</span>
       <span class="font-kb"></span>
       <a class="dl-btn" href="#" title="Download"
@@ -629,6 +642,10 @@ function renderResults(domain, fonts, reason, families) {
 
   const dlAll = fonts.length > 1
     ? '<button class="dl-all" type="button">↓ Download all</button>' : '';
+  // Small callout when we could tell how fonts are used on the site.
+  const usage = fonts.some(f => f.role)
+    ? '<p class="usage-note">Ordered by how each typeface is used on the site — headings and body text first.</p>'
+    : '';
   el.innerHTML = `
     <div class="results-head">
       <span class="results-domain">${domain}</span>
@@ -637,7 +654,7 @@ function renderResults(domain, fonts, reason, families) {
         ${dlAll}
       </span>
     </div>
-    ${rows || empty}${note}${famBlock}`;
+    ${usage}${rows || empty}${note}${famBlock}`;
   el.style.display = 'block';
 }
 

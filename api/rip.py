@@ -76,15 +76,17 @@ def font_urls_in_css(css, base):
     return found
 
 
-def font_faces_in_css(css, base, name_map):
+def font_faces_in_css(css, base, name_map, fam_map):
     """Map each font file URL -> a human name from its @font-face rule, so build
-    systems that hash filenames (Next.js etc.) still show 'Mulish-700', not a hash."""
+    systems that hash filenames (Next.js etc.) still show 'Mulish-700', not a hash.
+    Also record the raw family name per URL (for usage/role lookup)."""
     for block in re.finditer(r'@font-face\s*\{([^}]*)\}', css, re.S | re.I):
         b = block.group(1)
         fam_m = re.search(r'font-family\s*:\s*([^;]+)', b, re.I)
         if not fam_m:
             continue
-        family = re.sub(r'\s+', '', fam_m.group(1).strip().strip('\'"'))
+        raw_family = fam_m.group(1).strip().strip('\'"').strip()
+        family = re.sub(r'\s+', '', raw_family)
         if not family:
             continue
         name = family
@@ -104,7 +106,65 @@ def font_faces_in_css(css, base, name_map):
         for m in re.finditer(r'url\(["\']?([^"\')\s]+)["\']?\)', b, re.I):
             u = m.group(1).split('?')[0]
             if FONT_PAT.search(u):
-                name_map[urljoin(base, u)] = name
+                full = urljoin(base, u)
+                name_map[full] = name
+                fam_map[full] = raw_family.lower()
+
+
+# Which selectors / design-token names imply which usage role (priority order).
+ROLE_PATTERNS = [
+    ('Headings', re.compile(r'(?:^|[^a-z])h[1-6](?![a-z])|head(?:ing|line)|(?<![a-z])title|display|hero|font-heading|heading-font|font-display', re.I)),
+    ('Body',     re.compile(r'(?<![a-z])body(?![a-z])|(?<![a-z])html(?![a-z])|paragraph|prose|(?<![a-z])p(?![a-z])|copy|font-body|body-font|font-base|font-sans|font-text|font-serif|font-primary', re.I)),
+    ('Code',     re.compile(r'(?<![a-z])(?:code|pre|kbd|samp)(?![a-z])|(?<![a-z])mono|font-mono', re.I)),
+    ('UI',       re.compile(r'button|(?<![a-z])btn|(?<![a-z])nav|label|caption|badge|(?<![a-z])menu|font-ui', re.I)),
+]
+
+
+def _classify(selector):
+    for role, pat in ROLE_PATTERNS:
+        if pat.search(selector):
+            return role
+    return None
+
+
+def collect_roles(css, votes):
+    """Scan CSS rules + design tokens to guess how each font-family is used."""
+    # Design tokens: --font-heading: 'Mulish', ...  → role from the token name.
+    for m in re.finditer(r'(--[\w-]*font[\w-]*)\s*:\s*([^;{}]+)', css, re.I):
+        role = _classify(m.group(1))
+        if not role:
+            continue
+        for fam in _families_in_value(m.group(2)):
+            votes.setdefault(fam, {}).setdefault(role, 0)
+            votes[fam][role] += 2       # token names are strong signals
+
+    # Rules: selector { ... font-family: ... }
+    for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', css):
+        selector, body = m.group(1), m.group(2)
+        if 'font' not in body.lower():
+            continue
+        role = _classify(selector)
+        if not role:
+            continue
+        ff = re.search(r'font-family\s*:\s*([^;]+)', body, re.I)
+        if not ff:
+            continue
+        for fam in _families_in_value(ff.group(1)):
+            votes.setdefault(fam, {}).setdefault(role, 0)
+            votes[fam][role] += 1
+
+
+def _families_in_value(value):
+    """Yield real (non-generic, non-var) family names, lowercased, from a CSS value."""
+    out = []
+    for part in re.sub(r'!important', '', value, flags=re.I).split(','):
+        n = part.strip().strip('\'"').strip().lower()
+        if not n or n in GENERIC or n.startswith('var(') or '\\' in n or len(n) > 40:
+            continue
+        if not re.search(r'[a-z]', n):
+            continue
+        out.append(n)
+    return out
 
 
 def data_fonts_in_css(css):
@@ -161,9 +221,10 @@ def scrape(site_url):
     found_urls = set()
     data_fonts = []
     fam_count, fam_disp = {}, {}
-    name_map = {}
+    name_map, fam_map, role_votes = {}, {}, {}
     collect_families(html, fam_count, fam_disp)
-    font_faces_in_css(html, site_url, name_map)
+    font_faces_in_css(html, site_url, name_map, fam_map)
+    collect_roles(html, role_votes)
 
     inline = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', html, re.S | re.I))
     found_urls |= font_urls_in_css(inline, site_url)
@@ -181,10 +242,20 @@ def scrape(site_url):
         found_urls |= font_urls_in_css(css, css_url)
         data_fonts += data_fonts_in_css(css)
         collect_families(css, fam_count, fam_disp)
-        font_faces_in_css(css, css_url, name_map)
+        font_faces_in_css(css, css_url, name_map, fam_map)
+        collect_roles(css, role_votes)
         for imp in stylesheet_links(css, css_url, is_css=True):
             if imp not in visited:
                 queue.append(imp)
+
+    # Resolve one role per family (highest vote wins).
+    fam_role = {}
+    for fam, votes in role_votes.items():
+        fam_role[fam] = max(votes, key=votes.get)
+
+    def role_for(url, family_hint=''):
+        fam = (fam_map.get(url) or family_hint or '').lower()
+        return fam_role.get(fam, '')
 
     # Deduplicate external URL fonts, prefer woff2
     PREF = {'woff2': 0, 'woff': 1, 'ttf': 2, 'otf': 2, 'eot': 3}
@@ -209,9 +280,8 @@ def scrape(site_url):
         if nice != stem and nice in used:      # same family+weight (e.g. subsets)
             nice = nice + '-' + stem[:6]
         used.add(nice)
-        fonts.append({'name': nice, 'fmt': ext_str.upper(), 'url': url})
-
-    fonts.sort(key=lambda f: f['name'].lower())
+        fonts.append({'name': nice, 'fmt': ext_str.upper(), 'url': url,
+                      'role': role_for(url)})
 
     # Add base64-embedded fonts (dedupe by family+fmt)
     seen_families = set()
@@ -225,7 +295,12 @@ def scrape(site_url):
             'name': name,
             'fmt': df['fmt'].upper(),
             'url': f"data:font/{df['fmt']};base64,{df['b64']}",
+            'role': role_for('', df['family']),
         })
+
+    # Order: primary typefaces first (headings/body), utility & unknown last.
+    ROLE_ORDER = {'Headings': 0, 'Body': 1, 'Display': 2, 'UI': 3, 'Code': 4, '': 5}
+    fonts.sort(key=lambda f: (ROLE_ORDER.get(f.get('role', ''), 5), f['name'].lower()))
 
     ranked = sorted(fam_count, key=lambda k: -fam_count[k])
     families = [fam_disp[k] for k in ranked][:15]
