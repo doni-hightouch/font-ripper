@@ -1,5 +1,47 @@
 [
   {
+    "domain": "rakuten.com",
+    "fonts": [
+      {
+        "name": "Stag-300",
+        "fmt": "WOFF2",
+        "url": "https://static.rakuten.com/static/fonts/stag/Stag-Light-Web.woff2"
+      },
+      {
+        "name": "Stag-400",
+        "fmt": "WOFF2",
+        "url": "https://static.rakuten.com/static/fonts/stag/Stag-Book-Web.woff2"
+      },
+      {
+        "name": "Stag-600",
+        "fmt": "WOFF2",
+        "url": "https://static.rakuten.com/static/fonts/stag/Stag-Semibold-Web.woff2"
+      },
+      {
+        "name": "RakutenSansUI-400",
+        "fmt": "WOFF2",
+        "url": "https://static.rakuten.com/static/fonts/rakutenSansUI/RakutenSansUI_W_Rg.woff2"
+      },
+      {
+        "name": "RakutenSansUI-600",
+        "fmt": "WOFF2",
+        "url": "https://static.rakuten.com/static/fonts/rakutenSansUI/RakutenSansUI_W_SBd.woff2"
+      },
+      {
+        "name": "RakutenSansUI-700",
+        "fmt": "WOFF2",
+        "url": "https://static.rakuten.com/static/fonts/rakutenSansUI/RakutenSansUI_W_Bd.woff2"
+      },
+      {
+        "name": "RakutenSansUI-900",
+        "fmt": "WOFF2",
+        "url": "https://static.rakuten.com/static/fonts/rakutenSansUI/RakutenSansUI_W_Blk.woff2"
+      }
+    ],
+    "ts": "2026-08-04T22:59:19.202Z",
+    "count": 7
+  },
+  {
     "domain": "fonts.adobe.com",
     "fonts": [
       {
