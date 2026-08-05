@@ -1,5 +1,27 @@
 [
   {
+    "domain": "avast.com",
+    "fonts": [
+      {
+        "name": "MierB03-400",
+        "fmt": "WOFF2",
+        "url": "https://www.avast.com/etc.clientlibs/avast/clientlibs/generated/resources/MierB03-SubsetEng-Regular.woff2"
+      },
+      {
+        "name": "MierB03-700",
+        "fmt": "WOFF2",
+        "url": "https://www.avast.com/etc.clientlibs/avast/clientlibs/generated/resources/MierB03-SubsetEng-Bold.woff2"
+      },
+      {
+        "name": "MierB03-800",
+        "fmt": "WOFF2",
+        "url": "https://www.avast.com/etc.clientlibs/avast/clientlibs/generated/resources/MierB03-SubsetEng-ExtraBold.woff2"
+      }
+    ],
+    "ts": "2026-08-05T21:54:21.080Z",
+    "count": 3
+  },
+  {
     "domain": "rakuten.com",
     "fonts": [
       {
