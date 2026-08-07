@@ -1,5 +1,92 @@
 [
   {
+    "domain": "westelm.com",
+    "fonts": [
+      {
+        "name": "Sanomat-400",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/Sanomat-Regular-Web.woff2"
+      },
+      {
+        "name": "Sanomat-Light-400",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/Sanomat-Light-App.woff2"
+      },
+      {
+        "name": "we-new",
+        "fmt": "EOT",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/PSThemeHelperWestelm/1.0.13/iconFontwe-new.eot"
+      },
+      {
+        "name": "we-new",
+        "fmt": "WOFF",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/PSThemeHelperWestelm/1.0.13/iconFont/we-new.woff"
+      },
+      {
+        "name": "FontAwesome",
+        "fmt": "WOFF",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/font-awesome/fontawesome-webfont.woff"
+      },
+      {
+        "name": "GTEestiDisplay-300",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Light.woff2"
+      },
+      {
+        "name": "GTEestiDisplay-300-italic",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Light-Italic.woff2"
+      },
+      {
+        "name": "GTEestiDisplay-400",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Regular.woff2"
+      },
+      {
+        "name": "GTEestiDisplay-400-italic",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Regular-Italic.woff2"
+      },
+      {
+        "name": "GTEestiDisplay-500",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Medium.woff2"
+      },
+      {
+        "name": "GTEestiDisplay-500-italic",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Medium-Italic.woff2"
+      },
+      {
+        "name": "GTEestiDisplay-700",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Bold.woff2"
+      },
+      {
+        "name": "GTEestiDisplay-700-italic",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/Theme_Westelm/18.2.6/fonts/GT-Eesti-Display-Bold-Italic.woff2"
+      },
+      {
+        "name": "weheader",
+        "fmt": "WOFF",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/PSThemeHelperWestelm/1.0.13/headerMobileIcons/weheader.woff"
+      },
+      {
+        "name": "WestelmBadges-600",
+        "fmt": "WOFF2",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/AdditionalBadges/1.2.2/fonts/custom/west-elm-csr-icons.woff2"
+      },
+      {
+        "name": "westelm",
+        "fmt": "WOFF",
+        "url": "https://www.westelm.co.uk/we-uk-18-2/extensions/PS/PSThemeHelperWestelm/1.0.13/iconFont/westelm.woff"
+      }
+    ],
+    "ts": "2026-08-07T19:52:06.409Z",
+    "count": 16
+  },
+  {
     "domain": "thekey.com",
     "fonts": [
       {
