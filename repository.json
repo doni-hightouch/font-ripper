@@ -1,5 +1,52 @@
 [
   {
+    "domain": "thekey.com",
+    "fonts": [
+      {
+        "name": "PlayfairDisplay-VF",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgEM86xRbPQ.woff2"
+      },
+      {
+        "name": "PlayfairDisplay-VF-italic",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnogkk7yRZrPA.woff2"
+      },
+      {
+        "name": "PlayfairDisplay-VF-italic-nuFkD-",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnohkk7yRZrPJ-M.woff2"
+      },
+      {
+        "name": "PlayfairDisplay-VF-italic-nuFkD-",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnojEk7yRZrPJ-M.woff2"
+      },
+      {
+        "name": "PlayfairDisplay-VF-italic-nuFkD-",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnojUk7yRZrPJ-M.woff2"
+      },
+      {
+        "name": "PlayfairDisplay-VF-nuFiD-",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgEM86xRbPQ.woff2"
+      },
+      {
+        "name": "PlayfairDisplay-VF-nuFiD-",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgEM86xRbPQ.woff2"
+      },
+      {
+        "name": "PlayfairDisplay-VF-nuFiD-",
+        "fmt": "WOFF2",
+        "url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgEM86xQ.woff2"
+      }
+    ],
+    "ts": "2026-08-07T18:49:25.667Z",
+    "count": 8
+  },
+  {
     "domain": "avast.com",
     "fonts": [
       {
