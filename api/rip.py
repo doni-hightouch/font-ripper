@@ -163,8 +163,14 @@ def collect_roles(css, var_map, votes, pending):
                 votes[fam][role] += 2       # token names are strong signals
 
     # Rules: selector { ... font-family: ... }
-    for m in re.finditer(r'([^{}]+)\{([^{}]*)\}', css):
+    # Guard against pathological input (huge inline JSON/JS): a real selector is
+    # short, so skip giant pseudo-matches, and keep an eye on the clock.
+    for i, m in enumerate(re.finditer(r'([^{}]+)\{([^{}]*)\}', css)):
+        if (i & 0x3F) == 0 and time_left() < 12:
+            return
         selector, body = m.group(1), m.group(2)
+        if len(selector) > 300 or len(body) > 5000:
+            continue
         if 'font-family' not in body.lower():
             continue
         role = _classify(selector)
@@ -254,9 +260,11 @@ def scrape(site_url):
     var_map, pending = {}, []
     collect_families(html, fam_count, fam_disp)
     font_faces_in_css(html, site_url, name_map, fam_map)
-    collect_roles(html, var_map, role_votes, pending)
 
+    # CSS rules live in <style> blocks and stylesheets — scan those, not the whole
+    # document, so a page with a huge inline JSON payload stays cheap to parse.
     inline = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', html, re.S | re.I))
+    collect_roles(inline, var_map, role_votes, pending)
     found_urls |= font_urls_in_css(inline, site_url)
     data_fonts += data_fonts_in_css(inline)
 
