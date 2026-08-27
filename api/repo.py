@@ -62,6 +62,18 @@ def add_entry(entry):
     _kv(f'ltrim/{KEY}/0/{MAX_ENTRIES - 1}')         # bound the list
 
 
+def remove_domain(domain):
+    """Drop every entry for a domain (rewrites the list). Used to prune junk."""
+    entries = get_entries()
+    keep = [e for e in entries if e.get('domain') != domain]
+    if len(keep) == len(entries):
+        return 0
+    _kv(f'del/{KEY}')
+    for e in keep:                                  # RPUSH keeps original order
+        _kv(f'rpush/{KEY}', json.dumps(e))
+    return len(entries) - len(keep)
+
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
@@ -76,6 +88,16 @@ class handler(BaseHTTPRequestHandler):
             domain = body.get('domain', '')
             fonts  = body.get('fonts', [])
             ts     = body.get('ts', '')
+
+            # Maintenance: {"remove": "<domain>"} prunes entries for that domain.
+            if body.get('remove'):
+                if not KV_URL or not KV_TOKEN:
+                    self._json(503, {'error': 'storage not configured'})
+                    return
+                n = remove_domain(body['remove'])
+                self._json(200, {'ok': True, 'removed': n})
+                return
+
             if not domain or not fonts:
                 self._json(400, {'error': 'domain and fonts required'})
                 return
