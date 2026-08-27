@@ -184,6 +184,18 @@ canvas#grain {
 }
 .role-tag[data-role="Headings"] { color: var(--red); background: rgba(193,26,26,0.09); }
 .role-tag[data-role="Body"]     { color: var(--ink); }
+.brand-callout {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin: 14px 0 4px; padding: 10px 12px;
+  border: 1px solid var(--red); background: rgba(193,26,26,0.06);
+}
+.brand-callout .bc-tag {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--red); flex-shrink: 0;
+}
+.brand-callout .bc-text { font-size: 11px; line-height: 1.5; color: var(--ink); }
+.brand-callout a { color: var(--red); font-weight: 600; }
 .usage-note {
   margin: 10px 0 4px; font-size: 10.5px; line-height: 1.5; color: var(--mid);
 }
@@ -573,7 +585,7 @@ async function rip() {
       statusEl.textContent = 'Error: ' + data.error;
     } else {
       lastRip = {domain: data.domain, fonts: data.fonts};
-      renderResults(data.domain, data.fonts, data.reason, data.families);
+      renderResults(data.domain, data.fonts, data.reason, data.families, data.brand_page);
       if (data.fonts.length > 0) logToRepo(data.domain, data.fonts);
     }
   } catch(e) {
@@ -603,7 +615,7 @@ function isIconFont(name) {
   return /icon|glyph|symbol|dingbat|pictos/i.test(name);
 }
 
-function renderResults(domain, fonts, reason, families) {
+function renderResults(domain, fonts, reason, families, brandPage) {
   const el = document.getElementById('results');
   const rows = fonts.map(f => {
     const dlFmt = /woff/i.test(f.fmt) ? 'TTF' : f.fmt.toUpperCase();
@@ -643,6 +655,21 @@ function renderResults(domain, fonts, reason, families) {
   const dlAll = fonts.length > 1
     ? '<button class="dl-all" type="button">↓ Download all</button>' : '';
   // Small callout when we could tell how fonts are used on the site.
+  // Official source: many brands publish their real typefaces on a press page.
+  let brandBlock = '';
+  if (brandPage && brandPage.url) {
+    const line = brandPage.fonts_mentioned
+      ? 'This brand publishes official brand assets — often the real, licensed typefaces.'
+      : 'This brand has an official press / brand page — worth checking for licensed fonts.';
+    brandBlock = `
+      <div class="brand-callout">
+        <span class="bc-tag">Official source</span>
+        <span class="bc-text">${line}
+          <a href="${brandPage.url}" target="_blank" rel="noopener">${brandPage.url.replace(/^https?:\/\//,'')} ↗</a>
+        </span>
+      </div>`;
+  }
+
   const usage = fonts.some(f => f.role)
     ? '<p class="usage-note">Ordered by how each typeface is used on the site — headings and body text first.</p>'
     : '';
@@ -654,7 +681,7 @@ function renderResults(domain, fonts, reason, families) {
         ${dlAll}
       </span>
     </div>
-    ${usage}${rows || empty}${note}${famBlock}`;
+    ${brandBlock}${usage}${rows || empty}${note}${famBlock}`;
   el.style.display = 'block';
 }
 
