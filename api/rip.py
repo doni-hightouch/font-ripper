@@ -241,6 +241,58 @@ def stylesheet_links(text, base, is_css=False):
     return list(dict.fromkeys(urls))
 
 
+# ── Official brand / press page discovery ─────────────────────────────────────
+# Brands often publish their real typefaces on a press or brand-assets page.
+# We find it from the site's own links (free, and works even when extra fetches
+# are blocked), then confirm the page actually talks about fonts.
+
+BRAND_TEXT = re.compile(
+    r'^(press|newsroom|press room|brand|brand assets?|brand kit|media kit|'
+    r'press kit|brand guidelines?|brand resources?|brand portal)$', re.I)
+BRAND_HREF = re.compile(
+    r'/(press|newsroom|press-room|brand|brand-assets|brandassets|brand-kit|'
+    r'media-kit|press-kit|brand-guidelines|brand-resources)(/|$|\?|#)', re.I)
+FONT_WORDS = re.compile(r'\b(typeface|font|fonts|typography|otf|ttf|woff)\b', re.I)
+ASSET_LINK = re.compile(
+    r'href=["\']([^"\']+\.(?:zip|otf|ttf|woff2?)(?:\?[^"\']*)?)["\']', re.I)
+
+
+def find_brand_page(html, site_url):
+    """Pick the site's own press / brand-assets link, if it has one."""
+    host = (urlparse(site_url).hostname or '').replace('www.', '')
+    best, best_score = None, 0
+    for m in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+                         html, re.S | re.I):
+        href = m.group(1).strip()
+        text = re.sub(r'<[^>]+>', ' ', m.group(2))
+        text = re.sub(r'\s+', ' ', text).strip()
+        if not href or href.startswith(('#', 'mailto:', 'javascript:')):
+            continue
+        full = urljoin(site_url, href)
+        h = (urlparse(full).hostname or '').replace('www.', '')
+        if h and host and not (h == host or h.endswith('.' + host)):
+            continue                                  # keep it on the brand's site
+        score = 0
+        if BRAND_TEXT.match(text):
+            score += 3
+        if BRAND_HREF.search(urlparse(full).path):
+            score += 2
+        if score > best_score:
+            best, best_score = {'url': full, 'label': text or 'Brand assets'}, score
+    return best
+
+
+def inspect_brand_page(page):
+    """Does this page actually offer fonts? Return evidence found."""
+    hits = sorted({w.lower() for w in FONT_WORDS.findall(page)})
+    downloads = []
+    for m in ASSET_LINK.finditer(page):
+        u = m.group(1)
+        if u not in downloads:
+            downloads.append(u)
+    return hits, downloads[:5]
+
+
 def scrape(site_url):
     if not site_url.startswith('http'):
         site_url = 'https://' + site_url
@@ -251,13 +303,16 @@ def scrape(site_url):
 
     html = fetch(site_url)
     if not html:
-        return domain, [], False, []
+        return domain, [], False, [], None
 
     found_urls = set()
     data_fonts = []
     fam_count, fam_disp = {}, {}
     name_map, fam_map, role_votes = {}, {}, {}
     var_map, pending = {}, []
+    # Official brand/press page (free: read from the site's own links).
+    brand = find_brand_page(html, site_url)
+
     collect_families(html, fam_count, fam_disp)
     font_faces_in_css(html, site_url, name_map, fam_map)
 
@@ -351,7 +406,20 @@ def scrape(site_url):
     ranked = sorted(fam_count, key=lambda k: -fam_count[k])
     families = [fam_disp[k] for k in ranked][:15]
 
-    return domain, fonts, True, families
+    # Confirm the brand page really talks about fonts (budget permitting).
+    if brand and time_left() > 12:
+        page = fetch(brand['url'], referer=site_url)
+        if page:
+            hits, downloads = inspect_brand_page(page)
+            brand['fonts_mentioned'] = ('typeface' in hits
+                                        or 'typography' in hits
+                                        or (bool(hits) and bool(downloads)))
+            brand['downloads'] = downloads
+        else:
+            brand['fonts_mentioned'] = None      # couldn't check
+            brand['downloads'] = []
+
+    return domain, fonts, True, families, brand
 
 
 class handler(BaseHTTPRequestHandler):
@@ -364,8 +432,10 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            domain, fonts, loaded, families = scrape(url)
+            domain, fonts, loaded, families, brand = scrape(url)
             resp = {'domain': domain, 'fonts': fonts, 'families': families}
+            if brand:
+                resp['brand_page'] = brand
             if not fonts:
                 if not loaded:
                     resp['reason'] = ("We couldn't open this site — it's blocking "
