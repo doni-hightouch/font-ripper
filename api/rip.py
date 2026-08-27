@@ -1,9 +1,19 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, urljoin, quote
-import urllib.request, re, json, os
+import urllib.request, re, json, os, time
 from pathlib import Path
 
 SCRAPER_KEY = os.environ.get('SCRAPER_API_KEY', '')
+
+# Vercel kills the function at 60s. Stay under it so we always return real
+# results instead of a 504 — heavily-protected sites (every asset behind
+# Cloudflare) would otherwise spend the whole budget on proxied fetches.
+BUDGET_SECONDS = 45
+_deadline = [0.0]
+
+
+def time_left():
+    return _deadline[0] - time.time()
 
 # Generic / system keywords that aren't real typeface names.
 GENERIC = {'serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui',
@@ -39,16 +49,18 @@ UA = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
 
 
-def fetch(url, referer=None):
+def fetch(url, referer=None, allow_proxy=True):
     # Layer 1: direct urllib — free, works for the majority of sites.
     headers = {'User-Agent': UA, 'Accept': '*/*'}
     if referer:
         headers['Referer'] = referer
         p = urlparse(referer)
         headers['Origin'] = f'{p.scheme}://{p.netloc}'
+    budget = time_left()
     try:
         r = urllib.request.urlopen(
-            urllib.request.Request(url, headers=headers), timeout=12)
+            urllib.request.Request(url, headers=headers),
+            timeout=max(3, min(12, budget)))
         text = r.read().decode('utf-8', errors='ignore')
         if text:
             return text
@@ -56,10 +68,13 @@ def fetch(url, referer=None):
         pass
 
     # Layer 2: ScraperAPI fallback — residential proxy that gets past
-    # Cloudflare / bot protection that blocks datacenter requests.
-    if SCRAPER_KEY:
+    # Cloudflare / bot protection that blocks datacenter requests. It is slow
+    # (~4-20s per call), so only use it while there's budget to spare.
+    budget = time_left()
+    if SCRAPER_KEY and allow_proxy and budget > 8:
         try:
-            r = urllib.request.urlopen(scraper_url(url), timeout=60)
+            r = urllib.request.urlopen(
+                scraper_url(url), timeout=max(5, min(30, budget - 3)))
             return r.read().decode('utf-8', errors='ignore')
         except Exception:
             pass
@@ -224,6 +239,8 @@ def scrape(site_url):
     if not site_url.startswith('http'):
         site_url = 'https://' + site_url
 
+    _deadline[0] = time.time() + BUDGET_SECONDS
+
     domain = (urlparse(site_url).hostname or site_url).replace('www.', '')
 
     html = fetch(site_url)
@@ -245,6 +262,8 @@ def scrape(site_url):
 
     visited, queue = set(), stylesheet_links(html, site_url)
     while queue:
+        if time_left() < 5:          # out of budget: return what we have
+            break
         css_url = queue.pop(0)
         if css_url in visited:
             continue
