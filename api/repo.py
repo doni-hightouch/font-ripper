@@ -1,55 +1,71 @@
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import urlparse
-import urllib.request, json, os, base64
+import urllib.request, urllib.parse, json, os
 
-GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
-GITHUB_REPO  = os.environ.get('GITHUB_REPO', '')
-FILE_PATH    = 'repository.json'
-API_BASE     = 'https://api.github.com'
-MAX_ENTRIES  = 500
+# Vercel KV / Upstash Redis — credentials injected by the Vercel storage
+# integration and managed by Vercel, so nothing expires (unlike a GitHub PAT).
+KV_URL = (os.environ.get('KV_REST_API_URL')
+          or os.environ.get('UPSTASH_REDIS_REST_URL', '')).rstrip('/')
+KV_TOKEN = (os.environ.get('KV_REST_API_TOKEN')
+            or os.environ.get('UPSTASH_REDIS_REST_TOKEN', ''))
 
-
-def gh_headers():
-    return {
-        'Authorization': f'token {GITHUB_TOKEN}',
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'font-ripper',
-        'Content-Type': 'application/json',
-    }
+KEY = 'repository'
+MAX_ENTRIES = 1000
+# Public raw file — used once to import the existing history into KV.
+SEED_URL = 'https://raw.githubusercontent.com/doni-hightouch/font-ripper/main/repository.json'
 
 
-def get_file():
-    url = f'{API_BASE}/repos/{GITHUB_REPO}/contents/{FILE_PATH}'
-    req = urllib.request.Request(url, headers=gh_headers())
+def _kv(path, body=None):
+    """Call the Redis REST API. GET when body is None, else POST with raw body."""
+    url = f'{KV_URL}/{path}'
+    req = urllib.request.Request(url, method='POST' if body is not None else 'GET')
+    req.add_header('Authorization', f'Bearer {KV_TOKEN}')
+    if body is not None:
+        req.data = body if isinstance(body, bytes) else body.encode()
+    r = urllib.request.urlopen(req, timeout=10)
+    return json.loads(r.read().decode())
+
+
+def get_entries():
+    if not KV_URL or not KV_TOKEN:
+        return []
+    res = _kv(f'lrange/{KEY}/0/{MAX_ENTRIES - 1}')
+    raw = res.get('result') or []
+    entries = []
+    for item in raw:
+        try:
+            entries.append(json.loads(item))
+        except Exception:
+            pass
+    if entries:
+        return entries
+    return _seed()
+
+
+def _seed():
+    """First run: import the existing repository.json history from the public raw URL."""
     try:
-        r = urllib.request.urlopen(req, timeout=10)
-        data = json.loads(r.read())
-        content = json.loads(base64.b64decode(data['content']).decode())
-        return content, data['sha']
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return [], None
-        raise
+        data = urllib.request.urlopen(SEED_URL, timeout=10).read().decode()
+        entries = json.loads(data)
+        if isinstance(entries, list) and entries:
+            entries = entries[:MAX_ENTRIES]
+            # RPUSH in order so index 0 stays newest.
+            for e in entries:
+                _kv(f'rpush/{KEY}', json.dumps(e))
+            return entries
+    except Exception:
+        pass
+    return []
 
 
-def put_file(entries, sha, message='update repository'):
-    url  = f'{API_BASE}/repos/{GITHUB_REPO}/contents/{FILE_PATH}'
-    body = {
-        'message': message,
-        'content': base64.b64encode(json.dumps(entries, indent=2).encode()).decode(),
-    }
-    if sha:
-        body['sha'] = sha
-    req = urllib.request.Request(
-        url, data=json.dumps(body).encode(), headers=gh_headers(), method='PUT')
-    urllib.request.urlopen(req, timeout=10)
+def add_entry(entry):
+    _kv(f'lpush/{KEY}', json.dumps(entry))          # newest at head
+    _kv(f'ltrim/{KEY}/0/{MAX_ENTRIES - 1}')         # bound the list
 
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            entries, _ = get_file()
-            self._json(200, entries)
+            self._json(200, get_entries())
         except Exception as e:
             self._json(500, {'error': str(e)})
 
@@ -63,13 +79,12 @@ class handler(BaseHTTPRequestHandler):
             if not domain or not fonts:
                 self._json(400, {'error': 'domain and fonts required'})
                 return
-
-            entry = {'domain': domain, 'fonts': fonts, 'ts': ts, 'count': len(fonts)}
-
-            entries, sha = get_file()
-            entries.insert(0, entry)
-            entries = entries[:MAX_ENTRIES]
-            put_file(entries, sha, f'rip: {domain} ({len(fonts)} fonts)')
+            if not KV_URL or not KV_TOKEN:
+                self._json(503, {'error': 'storage not configured'})
+                return
+            # Make sure history is imported before the first append.
+            get_entries()
+            add_entry({'domain': domain, 'fonts': fonts, 'ts': ts, 'count': len(fonts)})
             self._json(200, {'ok': True})
         except Exception as e:
             self._json(500, {'error': str(e)})
